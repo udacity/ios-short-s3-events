@@ -1,2 +1,2 @@
-# chill-intents
-Intents microservice for Chill app.
+# chill-events
+Events microservice for Chill app.
