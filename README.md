@@ -1,2 +1,2 @@
-# chill-events
-Events microservice for Chill app.
+# events
+Events microservice.
