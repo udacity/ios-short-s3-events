@@ -1,21 +1,177 @@
-swagger: "2.0"
+swagger: '2.0'
+
 info:
-  version: 1.0.0
-  title: "chill-events"
-  description: A sample API that uses a petstore as an example to demonstrate features in the swagger-2.0 specification
-  termsOfService: http://swagger.io/terms/
+  version: '1.0.0'
+  title: 'Events'
+  description: 'Microservice for creating, retrieving, updating, and deleting events.'
   contact:
-    name: Swagger API Team
-    email: foo@example.com
-    url: http://madskristensen.net
+    name: Jarrod Parkes
+    email: jarrod@udacity.com
+    url: http://jarrodparkes.com
   license:
-    name: MIT
-    url: http://github.com/gruntjs/grunt/blob/master/LICENSE-MIT
-host: petstore.swagger.io
-basePath: /api
+    name: MIT License
+    
 schemes:
-  - http
+  - https
 consumes:
   - application/json
 produces:
   - application/json
+  
+paths:
+  /events:
+    get:
+      description: Returns events.
+      summary: Returns events.
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Event'
+        400:
+          $ref: "#/responses/BadRequest"
+        401:
+          $ref: "#/responses/Unauthorized"
+    post:
+      description: Creates a new event.
+      summary: Creates a new event.
+      parameters:
+        - name: event
+          in: body
+          description: Data for a new event.
+          required: true
+          schema:
+            $ref: '#/definitions/Event'
+      responses:
+        201:
+          description: Resource created.
+          schema:
+            $ref: '#/definitions/Event'
+        400:
+          $ref: "#/responses/BadRequest"            
+        401:
+          $ref: "#/responses/Unauthorized"
+        404:
+          $ref: "#/responses/NotFound"
+  /events/{id}:
+    get:
+      description: Returns event with ID.
+      summary: Returns event with ID.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to fetch
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            $ref: '#/definitions/Event'
+        400:
+          $ref: "#/responses/BadRequest"            
+        401:
+          $ref: "#/responses/Unauthorized"
+        404:
+          $ref: "#/responses/NotFound"
+    delete:
+      description: Deletes event with ID.
+      summary: Deletes event with ID.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to delete
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            $ref: '#/definitions/Event'
+        401:
+          $ref: "#/responses/Unauthorized"
+        404:
+          $ref: "#/responses/NotFound"
+
+responses:
+  BadRequest:
+    description: Invalid request.
+    schema:
+      $ref: "#/definitions/Error"  
+  NotFound:
+    description: The specified resource was not found.
+    schema:
+      $ref: "#/definitions/Error"
+  Unauthorized:
+    description: Unauthorized.
+    schema:
+      $ref: "#/definitions/Error"
+      
+definitions:
+  Event:
+    type: object
+    properties:
+      id:
+        type: string
+        description: ID of event.
+        readOnly: true
+        example: "1"
+      name:
+        type: string
+        description: Name of event.
+        example: "Game night at Angela's"
+      description:
+        type: string
+        description: Description of event.
+        example: "It's that time again. Trivial Pursuit and Monopoly."
+      host:
+        type: string
+        description: ID of user hosting event.
+        example: "1"
+      start_time:
+        type: string
+        description: Start time of event.
+        format: date-time
+      end_time:
+        type: string
+        description: End time of event.
+        format: date-time
+      location:
+        type: string
+        description: Location of event.
+        example: "San Francisco"
+      attendees:
+        type: array
+        description: IDs of users attending event.
+        readOnly: true
+        items:
+          type: string
+          example: "1"
+    required:
+      - name
+      - description
+      - host
+      - start_time
+      - end_time
+      - location
+      - attendees
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: Error status code.
+        format: int32
+      message:
+        type: string
+        description: Error description.
+    required:
+      - code
+      - message        
+    example:
+      code: 1
+      message: "There was an error."
