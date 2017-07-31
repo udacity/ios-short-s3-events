@@ -10,14 +10,14 @@ info:
     url: http://jarrodparkes.com
   license:
     name: MIT License
-    
+
 schemes:
   - https
 consumes:
   - application/json
 produces:
   - application/json
-  
+
 paths:
   /events:
     get:
@@ -43,14 +43,14 @@ paths:
           description: Data for a new event.
           required: true
           schema:
-            $ref: '#/definitions/Event'
+            $ref: '#/definitions/NewEvent'
       responses:
         201:
           description: Resource created.
           schema:
             $ref: '#/definitions/Event'
         400:
-          $ref: "#/responses/BadRequest"            
+          $ref: "#/responses/BadRequest"
         401:
           $ref: "#/responses/Unauthorized"
         404:
@@ -72,7 +72,7 @@ paths:
           schema:
             $ref: '#/definitions/Event'
         400:
-          $ref: "#/responses/BadRequest"            
+          $ref: "#/responses/BadRequest"
         401:
           $ref: "#/responses/Unauthorized"
         404:
@@ -101,7 +101,7 @@ responses:
   BadRequest:
     description: Invalid request.
     schema:
-      $ref: "#/definitions/Error"  
+      $ref: "#/definitions/Error"
   NotFound:
     description: The specified resource was not found.
     schema:
@@ -110,55 +110,87 @@ responses:
     description: Unauthorized.
     schema:
       $ref: "#/definitions/Error"
-      
+
 definitions:
   Event:
+    allOf:
+      - $ref: '#/definitions/NewEvent'
+      - required:
+        - id
+        properties:
+          id:
+            type: string
+            description: ID of event.
+            readOnly: true
+            default: "1"
+  NewEvent:
     type: object
     properties:
-      id:
-        type: string
-        description: ID of event.
-        readOnly: true
-        example: "1"
       name:
         type: string
         description: Name of event.
-        example: "Game night at Angela's"
+        default: "Game night at Angela's"
+      emoji:
+        type: string
+        description: Emoji representing event.
+        default: "💥"
       description:
         type: string
         description: Description of event.
-        example: "It's that time again. Trivial Pursuit and Monopoly."
+        default: "It's that time again. Trivial Pursuit and Monopoly."
       host:
         type: string
         description: ID of user hosting event.
-        example: "1"
+        default: "1"
       start_time:
         type: string
         description: Start time of event.
-        format: date-time
-      end_time:
-        type: string
-        description: End time of event.
-        format: date-time
+        format: YYYY-mm-dd HH:mm:ss
+        default: "2017-07-24 20:43:51"
       location:
         type: string
         description: Location of event.
-        example: "San Francisco"
+        default: "San Francisco"
+      public:
+        type: boolean
+        description: Is the event public or private?
+        default: false
+      created_at:
+        type: string
+        description: Date event was created.
+        format: YYYY-mm-dd HH:mm:ss
+        default: "2017-07-24 20:43:51"
+      updated_at:
+        type: string
+        description: Date event was created.
+        format: YYYY-mm-dd HH:mm:ss
+        default: "2017-07-24 20:43:51"
       attendees:
         type: array
         description: IDs of users attending event.
         readOnly: true
         items:
           type: string
-          example: "1"
+          default: "2"
+      activities:
+        type: array
+        description: IDs of activities for event.
+        readOnly: true
+        items:
+          type: string
+          default: "3"
     required:
       - name
+      - emoji
       - description
       - host
       - start_time
-      - end_time
       - location
+      - public
+      - updated_at
+      - created_at
       - attendees
+      - activities
   Error:
     type: object
     properties:
@@ -171,7 +203,7 @@ definitions:
         description: Error description.
     required:
       - code
-      - message        
+      - message
     example:
       code: 1
       message: "There was an error."
