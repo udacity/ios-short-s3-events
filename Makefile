@@ -58,6 +58,7 @@ web_build_run:
 
 web_clean:
 	rm -rf .build
+	rm Package.resolved
 
 web_unit_test:
 	swift test -s ActivitiesTests.HandlersTests -Xlinker -L/usr/local/lib

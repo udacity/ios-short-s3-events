@@ -64,6 +64,8 @@ public class Handlers {
 
         var event = Event()
 
+        Log.info("\(row)")
+
         if let id = row["id"] as? Int {
           event.id = id
         }
@@ -86,6 +88,10 @@ public class Handlers {
 
         if let emoji = row["emoji"] as? String {
           event.emoji = emoji
+        }
+
+        if let description = row["description"] as? String {
+          event.description = description
         }
 
         let dateFormatter = DateFormatter()

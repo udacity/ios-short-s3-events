@@ -70,7 +70,7 @@ CREATE TABLE `events` (
 
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
-INSERT INTO `events` VALUES (7,'Always Look On the Bright Side of the Planet Earth','\xf0\x9f\x94\xa5','Its game night! Lets play some games!',1,'2017-08-01 14:53:25','San Francisco',1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),(8,'Event 2','\xf0\x9f\x87\xba\xf0\x9f\x87\xb8','Another event description',1,'2017-08-01 14:54:14','Huntsville',1,'2017-08-01 14:54:14','2017-07-24 20:43:51');
+INSERT INTO `events` VALUES (7,'Always Look On the Bright Side of the Planet Earth','\\xf0\\x9f\\x94\\xa5','Its game night! Lets play some games!',1,'2017-08-01 14:53:25','San Francisco',1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),(8,'Event 2','\\xf0\\x9f\\x87\\xba\\xf0\\x9f\\x87\\xb8','Another event description',1,'2017-08-01 14:54:14','Huntsville',1,'2017-08-01 14:54:14','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 
