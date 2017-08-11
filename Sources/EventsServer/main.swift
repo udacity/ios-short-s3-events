@@ -30,9 +30,25 @@ let handlers = Handlers(connectionPool: pool)
 // Create router
 let router = Router()
 
-// Handle HTTP GET requests to /
+// Setup paths
+router.all("/*", middleware: BodyParser())
+router.all("/*", middleware: AllRemoteOriginMiddleware())
+router.all("/*", middleware: LoggerMiddleware())
+router.options("/*", handler: handlers.getOptions)
+
+// GET
+router.get("/*", middleware: CheckRequestMiddleware(method: .get))
 router.get("/events", handler: handlers.getEvents)
 router.get("/events/:id", handler: handlers.getEvents)
+
+// POST
+router.post("/*", middleware: CheckRequestMiddleware(method: .post))
+
+// PUT
+router.put("/*", middleware: CheckRequestMiddleware(method: .put))
+
+// DELETE
+router.delete("/*", middleware: CheckRequestMiddleware(method: .delete))
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)
