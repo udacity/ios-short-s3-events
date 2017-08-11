@@ -19,6 +19,11 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=password
 
+# ========
+# Testing
+# ========
+TEST_COMMAND=swift test -Xlinker -L/usr/local/lib
+
 # =============
 # Build Images
 # =============
@@ -52,61 +57,87 @@ web_dev:
 web_build:
 	swift build -Xlinker -L/usr/local/lib
 
-web_build_run:
-	swift build -Xlinker -L/usr/local/lib
-	./.build/debug/ActivitiesServer
+web_build_run: web_build
+	./.build/debug/EventsServer
 
 web_clean:
 	rm -rf .build
-	rm Package.resolved
+	rm Package.pins
 
-web_unit_test:
-	swift test -s ActivitiesTests.HandlersTests -Xlinker -L/usr/local/lib
-	swift test -s ActivitiesTests.QueryResultAdaptorTests -Xlinker -L/usr/local/lib
+web_unit_test: web_prep_test
+	$(TEST_COMMAND) -s EventsTests.HandlersTests
+	$(TEST_COMMAND) -s EventsTests.QueryResultAdaptorTests
 
-web_functional_test:
-	swift test -s FunctionalTests.FunctionalTests -Xlinker -L/usr/local/lib
+web_functional_test: web_prep_test
+	$(TEST_COMMAND) -s FunctionalTests.FunctionalTests
 
-web_unit_test_docker:
+web_unit_test_docker: web_prep_test
 	docker run --rm -v $(shell pwd):/src \
-	-w /src ${WEB_IMAGE} /bin/bash -c 'swift test -s ActivitiesTests.HandlersTests --build-path=/.build'
+	-w /src ${WEB_IMAGE} /bin/bash -c 'TEST=true swift test -s EventsTests.HandlersTests --build-path=/.build'
 
-web_functional_test_docker:
+web_functional_test_docker: web_prep_test
 	docker run --rm -v $(shell pwd):/src \
-	-w /src ${WEB_IMAGE} /bin/bash -c 'swift test -s FunctionalTests.FunctionalTests --build-path=/.build'
+	-w /src ${WEB_IMAGE} /bin/bash -c 'TEST=true swift test -s FunctionalTests.FunctionalTests --build-path=/.build'
+
+web_prep_test:
+	export TEST=true
+
+# ========================
+# Production Microservice
+# ========================
+
+release_build:
+	docker run -it --rm -v $(shell pwd):/src -w /src kitura-server /bin/bash -c \
+		"swift build -c release \
+		-Xlinker -L/usr/lib/swift/linux \
+		-Xlinker -L/usr/local/lib \
+		-Xswiftc -static-stdlib"
+	docker run -it --rm -v $(shell pwd):/src -w /src kitura-server /bin/bash -c \
+		"cp /usr/lib/swift/linux/*.so /src/linux_shared"
+	docker build -t activities-server -f Dockerfile-prod .
 
 # ===================
 # Database Container
 # ===================
 db_run: db_stop
-	docker run --name ${DB_CONTAINER_NAME} \
-	-v ${DB_DATA_DIR}:/var/lib/mysql \
+	docker run \
+	-d \
+	--name ${DB_CONTAINER_NAME} \
 	-e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
-	-d --expose ${DB_PORT} ${DB_IMAGE}
+	--expose ${DB_PORT} \
+	-p ${DB_PORT}:${DB_PORT} \
+	-v ${DB_DATA_DIR}:/var/lib/mysql \
+	${DB_IMAGE} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
 
 db_run_clean: db_stop db_clean
 	docker run --name ${DB_CONTAINER_NAME} \
+	-e MYSQL_DATABASE=${DB_DATABASE} \
+	-e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
 	-v ${DB_DATA_DIR}:/var/lib/mysql \
-	-e MYSQL_DATABASE=${DB_DATABASE} -e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
-	-d --expose ${DB_PORT} ${DB_IMAGE}
+	-d --expose ${DB_PORT} ${DB_IMAGE} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
 
 db_run_seed: db_stop db_clean
-	docker run --name ${DB_CONTAINER_NAME} \
-	-v ${DB_SEED_DIR}:/docker-entrypoint-initdb.d -v ${DB_DATA_DIR}:/var/lib/mysql \
-	-e MYSQL_DATABASE=${DB_DATABASE} -e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
-	-d --expose ${DB_PORT} ${DB_IMAGE}
+	docker run \
+	-d \
+	--name ${DB_CONTAINER_NAME} \
+	-e MYSQL_ROOT_PASSWORD=${DB_PASSWORD} \
+	-e MYSQL_DATABASE=${DB_DATABASE} \
+	--expose ${DB_PORT} \
+	-v ${DB_DATA_DIR}:/var/lib/mysql \
+	-v ${DB_SEED_DIR}:/docker-entrypoint-initdb.d \
+	${DB_IMAGE} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
 
 db_connect_bash:
 	docker exec -it ${DB_CONTAINER_ID} /bin/bash
 
 db_connect_shell:
 	docker run --name mysql-shell -it \
-	--rm mysql sh -c 'exec mysql -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASSWORD}'
+	--rm mysql sh -c 'exec mysql -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASSWORD} --default-character-set=utf8mb4'
 
 db_dump:
 	docker run --name mysqldump-shell \
 	-v ${DB_SEED_DIR}:/Seed \
-	--rm mysql sh -c 'exec mysqldump -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASSWORD} ${DB_DATABASE} > ${DB_SEED_FILE}'
+	--rm mysql sh -c 'exec mysqldump -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASSWORD} ${DB_DATABASE} --default-character-set=utf8mb4 > ${DB_SEED_FILE}'
 
 db_stop:
 	@docker stop ${DB_CONTAINER_NAME} || true && docker rm ${DB_CONTAINER_NAME} || true

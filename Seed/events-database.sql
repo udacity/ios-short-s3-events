@@ -4,10 +4,12 @@
 -- ------------------------------------------------------
 -- Server version	5.7.19
 
+-- MUST SET 40101 to see emoji
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
+/*!40101 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -77,8 +79,8 @@ ALTER TABLE `events` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
 INSERT INTO `events` VALUES
-(1,'Always Look On the Bright Side of the Planet Earth','','Its game night! Lets play some games!',1,'2017-08-01 14:53:25','San Francisco',1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),
-(2,'Event 2','','Another event description',1,'2017-08-01 14:54:14','Huntsville',1,'2017-08-01 14:54:14','2017-07-24 20:43:51');
+(1,'Always Look On the Bright Side of the Planet Earth','🔥','Its game night! Lets play some games!',1,'2017-08-01 14:53:25','San Francisco',1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),
+(2,'Event 2','🕹','Another event description',1,'2017-08-01 14:54:14','Huntsville',1,'2017-08-01 14:54:14','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 

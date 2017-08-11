@@ -1,30 +1,28 @@
-// swift-tools-version:4.0
-
+// swift-tools-version:3.1
+import Foundation
 import PackageDescription
 
 let package = Package(
     name: "EventsService",
 
-    products: [
-        .executable(name: "EventsServer", targets: ["EventsServer"]),
+    targets: [
+        Target(name: "EventsService"),
+        Target(name: "EventsServer", dependencies: ["EventsService"]),
     ],
 
     dependencies: [
-        .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
-        .package(url: "https://github.com/IBM-Swift/HeliumLogger.git", from: "1.0.0"),
-        //.package(url: "https://github.com/nicholasjackson/swift-mysql.git", from: "1.1.0"),
-        .package(url: "https://github.com/jarrodparkes/swift-mysql.git", .branch("master")),
-
-        // test imports
-        .package(url: "https://github.com/nicholasjackson/kitura-http-test.git", from: "0.2.0")
-    ],
-
-    targets: [
-        .target(name: "EventsService", dependencies: ["Kitura", "HeliumLogger", "MySQL"]),
-        .target(name: "EventsServer", dependencies: ["EventsService"]),
-        //.testTarget(name: "EventsTests", dependencies: ["EventsService"]),
-        //.testTarget(name: "FunctionalTests")
-    ],
-
-    swiftLanguageVersions: [3]
+        .Package(url: "https://github.com/IBM-Swift/Kitura.git", majorVersion: 1, minor: 7),
+        .Package(url: "https://github.com/IBM-Swift/HeliumLogger.git", majorVersion: 1, minor: 7),
+        .Package(url: "https://github.com/nicholasjackson/swift-mysql.git", majorVersion: 1, minor: 3)
+    ]
 )
+
+if ProcessInfo.processInfo.environment["TEST"] != nil {
+    package.targets.append(Target(name: "EventsTests", dependencies: ["EventsService"]))
+    package.targets.append(Target(name: "FunctionalTests"))
+    package.dependencies.append(.Package(
+        url: "https://github.com/nicholasjackson/kitura-http-test.git",
+        majorVersion: 0,
+        minor: 2)
+    )
+}

@@ -1,117 +1,68 @@
-import Foundation
-import Kitura
-import SwiftyJSON
-import LoggerAPI
 import MySQL
+import Kitura
+import LoggerAPI
+import Foundation
+import SwiftyJSON
+
+// MARK: - Handlers
 
 public class Handlers {
-    var connectionPool: MySQLConnectionPool
 
-    public init(connectionPool: MySQLConnectionPool) {
+    // MARK: Properties
+
+    let connectionPool: MySQLConnectionPoolProtocol
+
+    // MARK: Initializer
+
+    public init(connectionPool: MySQLConnectionPoolProtocol) {
         self.connectionPool = connectionPool
     }
 
-    /**
-     * Handler for getting an application/json response.
-     */
+    // MARK: OPTIONS
+
+    public func getOptions(request: RouterRequest, response: RouterResponse, next: () -> Void) throws {
+        response.headers["Access-Control-Allow-Headers"] = "accept, content-type"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,DELETE,OPTIONS,PUT"
+        try response.status(.OK).end()
+    }
+
+    // MARK: GET
+
     public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        Log.info("GET - /events route handler...")
+        let id = request.parameters["id"]
+        try safeDBQuery(response: response) { (accessor: EventMySQLDataAccessor) in
 
-        if request.method != RouterMethod.get {
-            try response.status(.badRequest).end()
-            return
+            var events: [Event]?
+
+            if let id = id {
+                events = try accessor.getEvents(withID: id)
+            } else {
+                events = try accessor.getEvents()
+            }
+
+            if events == nil {
+                try response.status(.notFound).end()
+                return
+            }
+
+            try response.send(json: events!.toJSON()).status(.OK).end()
         }
+    }
 
+    // MARK: Utility
+
+    // execute queries safely and return error on failure
+    private func safeDBQuery(response: RouterResponse,
+                             block: @escaping ((_: EventMySQLDataAccessor) throws -> Void)) throws {
         do {
-          let connection = try connectionPool.getConnection()!
-
-          // release the connection back to the pool
-          defer {
-            connectionPool.releaseConnection(connection)
-          }
-
-          let client = MySQLClient(connection: connection)
-          let result = client.execute(query: "SELECT * from events")
-          try returnResult(result: result, response: response)
-
+            try connectionPool.getConnection { (connection: MySQLConnectionProtocol) in
+                    let dataAccessor = EventMySQLDataAccessor(connection: connection)
+                    try block(dataAccessor)
+            }
         } catch {
-          Log.error("Unable to create connection")
-          try response.status(.internalServerError).end()
-        }
-    }
-
-    private func returnResult(result: (MySQLResultProtocol?, error: MySQLError?), response: RouterResponse) throws {
-      if let _ = result.1 {
+            Log.error(error.localizedDescription)
             try response.status(.internalServerError).end()
-            return
         }
-
-        let events = toEvents(result: result.0!)
-
-        if events.count > 0 {
-            try response.send(json: events.toJSON()).status(.OK).end()
-        } else {
-            try response.status(.notFound).end()
-        }
-    }
-
-    private func toEvents(result: MySQLResultProtocol) -> [Event] {
-
-      var events = [Event]()
-
-      while case let row? = result.nextResult() {
-
-        var event = Event()
-
-        Log.info("\(row)")
-
-        if let id = row["id"] as? Int {
-          event.id = id
-        }
-
-        if let host = row["host"] as? Int {
-          event.host = host
-        }
-
-        if let isPublic = row["public"] as? Int {
-          event.isPublic = isPublic
-        }
-
-        if let name = row["name"] as? String {
-          event.name = name
-        }
-
-        if let location = row["location"] as? String {
-          event.location = location
-        }
-
-        if let emoji = row["emoji"] as? String {
-          event.emoji = emoji
-        }
-
-        if let description = row["description"] as? String {
-          event.description = description
-        }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
-        if let startTimeString = row["start_time"] as? String, let startTime = dateFormatter.date(from: startTimeString) {
-          event.startTime = startTime
-        }
-
-        if let createdAtString = row["created_at"] as? String, let createdAt = dateFormatter.date(from: createdAtString) {
-          event.createdAt = createdAt
-        }
-
-        if let updatedAtString = row["updated_at"] as? String, let updatedAt = dateFormatter.date(from: updatedAtString) {
-          event.updatedAt = updatedAt
-        }
-
-        events.append(event)
-      }
-
-      return events
     }
 }

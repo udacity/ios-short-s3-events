@@ -9,7 +9,7 @@ import MySQL
 setbuf(stdout, nil)
 
 // Init logger
-HeliumLogger.use()
+HeliumLogger.use(.info)
 
 // Create connection string (use env variables, if exists)
 let env = ProcessInfo.processInfo.environment
@@ -22,9 +22,7 @@ connectionString.password = env["MYSQL_PASSWORD"] ?? "password"
 connectionString.database = env["MYSQL_DATABASE"] ?? "game-night"
 
 // Create connection pool
-var pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10) {
-  return MySQL.MySQLConnection()
-}
+var pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10, defaultCharset: "utf8mb4")
 
 // Create handlers
 let handlers = Handlers(connectionPool: pool)
@@ -34,6 +32,7 @@ let router = Router()
 
 // Handle HTTP GET requests to /
 router.get("/events", handler: handlers.getEvents)
+router.get("/events/:id", handler: handlers.getEvents)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)
