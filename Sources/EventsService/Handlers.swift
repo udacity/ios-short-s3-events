@@ -31,19 +31,28 @@ public class Handlers {
     public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         let id = request.parameters["id"]
-        try safeDBQuery(response: response) { (accessor: EventMySQLDataAccessor) in
+        try safeDBQuery(response: response) {
+            (eventAccessor: EventMySQLDataAccessor, eventGameAccessor: EventGameMySQLDataAccessor) in
 
             var events: [Event]?
+            var eventGames: [EventGame]?
 
             if let id = id {
-                events = try accessor.getEvents(withID: id)
+                events = try eventAccessor.getEvents(withID: id)
+                eventGames = try eventGameAccessor.getGamesForEvent(withID: id)
             } else {
-                events = try accessor.getEvents()
+                events = try eventAccessor.getEvents()
             }
 
             if events == nil {
                 try response.status(.notFound).end()
                 return
+            }
+
+            events![0].games = [Int]()
+
+            for game in eventGames! {
+                events![0].games?.append(game.activityId!)
             }
 
             try response.send(json: events!.toJSON()).status(.OK).end()
@@ -53,12 +62,13 @@ public class Handlers {
     // MARK: Utility
 
     // execute queries safely and return error on failure
-    private func safeDBQuery(response: RouterResponse,
-                             block: @escaping ((_: EventMySQLDataAccessor) throws -> Void)) throws {
+    private func safeDBQuery(response: RouterResponse, block: @escaping
+        ((_: EventMySQLDataAccessor, _: EventGameMySQLDataAccessor) throws -> Void)) throws {
         do {
             try connectionPool.getConnection { (connection: MySQLConnectionProtocol) in
-                    let dataAccessor = EventMySQLDataAccessor(connection: connection)
-                    try block(dataAccessor)
+                    let eventAccessor = EventMySQLDataAccessor(connection: connection)
+                    let eventGamesAccessor = EventGameMySQLDataAccessor(connection: connection)
+                    try block(eventAccessor, eventGamesAccessor)
             }
         } catch {
             Log.error(error.localizedDescription)

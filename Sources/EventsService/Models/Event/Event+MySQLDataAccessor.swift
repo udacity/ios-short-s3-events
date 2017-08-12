@@ -20,7 +20,6 @@ class EventMySQLDataAccessor {
 
     // MARK: Queries
 
-
     func getEvents(withID id: String) throws -> [Event]? {
         let select = selectEvents.wheres(statement:"WHERE Id=?", parameters: id)
 
