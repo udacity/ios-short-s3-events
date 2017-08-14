@@ -1,5 +1,6 @@
 import Foundation
 import SwiftyJSON
+import LoggerAPI
 
 // MARK: - Event
 
@@ -13,7 +14,7 @@ public struct Event {
     public var location: String?
     public var isPublic: Int?
     public var games: [Int]?
-    public var rsvps: [Int]?
+    public var rsvps: [RSVP]?
     public var createdAt: Date?
     public var updatedAt: Date?
 }
@@ -26,26 +27,23 @@ extension Event: JSONAble {
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
         var dict = [String: Any]()
-        let nilString: String? = nil
-        let nilInt: Int? = nil
-        let nilDate: Date? = nil
-        let nilKeys: [Int]? = nil
+        let nilValue: Any? = nil
 
-        dict["id"] = id != nil ? id : nilInt
-        dict["public"] = isPublic != nil ? isPublic : nilInt
-        dict["host"] = host != nil ? host : nilInt
+        dict["id"] = id != nil ? id : nilValue
+        dict["public"] = isPublic != nil ? isPublic : nilValue
+        dict["host"] = host != nil ? host : nilValue
 
-        dict["name"] = name != nil ? name : nilString
-        dict["emoji"] = emoji != nil ? emoji : nilString
-        dict["description"] = description != nil ? description : nilString
-        dict["location"] = location != nil ? location : nilString
+        dict["name"] = name != nil ? name : nilValue
+        dict["emoji"] = emoji != nil ? emoji : nilValue
+        dict["description"] = description != nil ? description : nilValue
+        dict["location"] = location != nil ? location : nilValue
 
-        dict["start_time"] = startTime != nil ? dateFormatter.string(from: startTime!) : nilDate
-        dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilDate
-        dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilDate
+        dict["start_time"] = startTime != nil ? dateFormatter.string(from: startTime!) : nilValue
+        dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilValue
+        dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilValue
 
-        dict["games"] = games != nil ? games : nilKeys
-        dict["rsvps"] = rsvps != nil ? rsvps : nilKeys
+        dict["games"] = games != nil ? games : nilValue
+        dict["rsvps"] = rsvps != nil ? rsvps!.toJSON().object : nilValue
 
         return JSON(dict)
     }
