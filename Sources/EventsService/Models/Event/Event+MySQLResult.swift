@@ -43,13 +43,8 @@ public extension MySQLResultProtocol {
                     }
                 }
 
-                if let host = row["host"] as? Int {
-                    eventsDictionary[id]?.host = host
-                }
-
-                if let isPublic = row["is_public"] as? Int {
-                    eventsDictionary[id]?.isPublic = isPublic
-                }
+                eventsDictionary[id]?.host = row["host"] as? Int
+                eventsDictionary[id]?.isPublic = row["is_public"] as? Int
 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -69,21 +64,10 @@ public extension MySQLResultProtocol {
                        eventsDictionary[id]?.updatedAt = updatedAt
                 }
 
-                if let name = row["name"] as? String {
-                    eventsDictionary[id]?.name = name
-                }
-
-                if let emoji = row["emoji"] as? String {
-                    eventsDictionary[id]?.emoji = emoji
-                }
-
-                if let description = row["description"] as? String {
-                    eventsDictionary[id]?.description = description
-                }
-
-                if let location = row["location"] as? String {
-                    eventsDictionary[id]?.location = location
-                }
+                eventsDictionary[id]?.name = row["name"] as? String
+                eventsDictionary[id]?.emoji = row["emoji"] as? String
+                eventsDictionary[id]?.description = row["description"] as? String
+                eventsDictionary[id]?.location = row["location"] as? String
 
             } else {
                 Log.error("event_id not found in \(row)")
