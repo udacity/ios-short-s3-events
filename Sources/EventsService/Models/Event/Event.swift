@@ -13,6 +13,7 @@ public struct Event {
     public var location: String?
     public var isPublic: Int?
     public var games: [Int]?
+    public var rsvps: [Int]?
     public var createdAt: Date?
     public var updatedAt: Date?
 }
@@ -28,7 +29,7 @@ extension Event: JSONAble {
         let nilString: String? = nil
         let nilInt: Int? = nil
         let nilDate: Date? = nil
-        let nilGames: [Int]? = nil
+        let nilKeys: [Int]? = nil
 
         dict["id"] = id != nil ? id : nilInt
         dict["public"] = isPublic != nil ? isPublic : nilInt
@@ -43,7 +44,8 @@ extension Event: JSONAble {
         dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilDate
         dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilDate
 
-        dict["games"] = games != nil ? games : nilGames
+        dict["games"] = games != nil ? games : nilKeys
+        dict["rsvps"] = rsvps != nil ? rsvps : nilKeys
 
         return JSON(dict)
     }

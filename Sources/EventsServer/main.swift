@@ -22,8 +22,11 @@ connectionString.database = env["MYSQL_DATABASE"] ?? "game_night"
 // Create connection pool
 var pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10, defaultCharset: "utf8mb4")
 
+// Create data accessor (uses pool to get connections and access data!)
+var dataAccessor = EventMySQLDataAccessor(pool: pool)
+
 // Create handlers
-let handlers = Handlers(connectionPool: pool)
+let handlers = Handlers(dataAccessor: dataAccessor)
 
 // Create router
 let router = Router()
