@@ -90,7 +90,7 @@ extension HandlersTests {
         return [
             ("testQueriesDataBaseForEvents", testQueriesDataBaseForEvents),
             ("testReturnsEventsOnSuccessfulQuery", testReturnsEventsOnSuccessfulQuery),
-            ("testReturnsNonFoundWhenNoEventsFromQuery", testReturnsNotFoundWhenNoEventsFromQuery)
+            ("testReturnsNotFoundWhenNoEventsFromQuery", testReturnsNotFoundWhenNoEventsFromQuery)
        ]
     }
 }
