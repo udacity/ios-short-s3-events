@@ -71,7 +71,8 @@ public class Handlers {
             games: nil, rsvps: nil,
             createdAt: nil, updatedAt: nil)
 
-        let missingParameters = newEvent.validate()
+        let missingParameters = newEvent.validateParameters(
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")

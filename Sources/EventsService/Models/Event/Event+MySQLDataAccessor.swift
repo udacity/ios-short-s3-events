@@ -30,6 +30,18 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     // MARK: Queries
 
+    public func createEvent(_ event: Event) throws -> Bool {
+        return false
+    }
+
+    public func updateEvent(_ event: Event) throws -> Bool {
+        return false
+    }
+
+    public func deleteEvent(withID id: String) throws -> Bool {
+        return false
+    }
+
     public func getEvents(withID id: String) throws -> [Event]? {
         let query = selectQuery + " WHERE events.id=\(id)"
         let result = try execute(query: query)

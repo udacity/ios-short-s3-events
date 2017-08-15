@@ -68,13 +68,12 @@ extension Event {
 // MARK: - Event (Validate)
 
 extension Event {
-    public func validate() -> [String] {
+    public func validateParameters(_ parameters: [String]) -> [String] {
         var missingParameters = [String]()
-        let validateParameters = ["name", "emoji", "description", "host", "start_time", "location", "is_public"]
-        let eventMirror = Mirror(reflecting: self)
+        let mirror = Mirror(reflecting: self)
 
-        for (name, value) in eventMirror.children {
-            guard let name = name, validateParameters.contains(name) else { continue }
+        for (name, value) in mirror.children {
+            guard let name = name, parameters.contains(name) else { continue }
             if "\(value)" == "nil" {
                 missingParameters.append("\(name)")
             }
