@@ -9,7 +9,7 @@ public extension MySQLResultProtocol {
     public func toEvents() -> [Event] {
 
         var eventsDictionary = [Int:Event]()
-        var userIdsAttending = [Int]()
+        var usersAttending = [Int]()
 
         while case let row? = self.nextResult() {
 
@@ -20,26 +20,26 @@ public extension MySQLResultProtocol {
                 eventsDictionary[id]?.id = id
 
                 if let activityID = row["activity_id"] as? Int {
-                    if eventsDictionary[id]?.games == nil {
-                        eventsDictionary[id]?.games = [Int]()
+                    if eventsDictionary[id]?.activities == nil {
+                        eventsDictionary[id]?.activities = [Int]()
                     }
-                    if eventsDictionary[id]?.games?.contains(activityID) == false {
-                        eventsDictionary[id]?.games?.append(activityID)
+                    if eventsDictionary[id]?.activities?.contains(activityID) == false {
+                        eventsDictionary[id]?.activities?.append(activityID)
                     }
                 }
 
                 if let userID = row["user_id"] as? Int {
-                    if eventsDictionary[id]?.rsvps == nil {
-                        eventsDictionary[id]?.rsvps = [RSVP]()
-                        userIdsAttending.append(userID)
+                    if eventsDictionary[id]?.attendees == nil {
+                        eventsDictionary[id]?.attendees = [RSVP]()
+                        usersAttending.append(userID)
                     }
-                    if userIdsAttending.contains(userID) == false {
+                    if usersAttending.contains(userID) == false {
                         var rsvp = RSVP()
                         rsvp.userID = userID
                         rsvp.eventID = row["event_id"] as? Int
                         rsvp.accepted = row["accepted"] as? Int
                         rsvp.comment = row["comment"] as? String
-                        eventsDictionary[id]?.rsvps?.append(rsvp)
+                        eventsDictionary[id]?.attendees?.append(rsvp)
                     }
                 }
 

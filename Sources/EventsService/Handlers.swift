@@ -68,7 +68,7 @@ public class Handlers {
             startTime: nil,
             location: json["location"].string,
             isPublic: json["public"].int,
-            games: nil, rsvps: nil,
+            activities: nil, attendees: nil,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = newEvent.validateParameters(
@@ -111,7 +111,7 @@ public class Handlers {
             startTime: nil,
             location: json["location"].string,
             isPublic: json["public"].int,
-            games: nil, rsvps: nil,
+            activities: nil, attendees: nil,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateEvent.validateParameters(

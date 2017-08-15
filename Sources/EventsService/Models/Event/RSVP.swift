@@ -15,14 +15,12 @@ public struct RSVP {
 extension RSVP: JSONAble {
     public func toJSON() -> JSON {
         var dict = [String: Any]()
-        let nilString: String? = nil
-        let nilInt: Int? = nil
-        
-        dict["user_id"] = userID != nil ? userID : nilInt
-        dict["event_id"] = eventID != nil ? eventID : nilInt
-        dict["accepted"] = accepted != nil ? accepted : nilInt
+        let nilValue: Any? = nil
 
-        dict["comment"] = comment != nil ? comment : nilString
+        dict["user_id"] = userID != nil ? userID : nilValue
+        dict["event_id"] = eventID != nil ? eventID : nilValue
+        dict["accepted"] = accepted != nil ? accepted : nilValue
+        dict["comment"] = comment != nil ? comment : nilValue
 
         return JSON(dict)
     }

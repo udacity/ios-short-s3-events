@@ -13,8 +13,8 @@ public struct Event {
     public var startTime: Date?
     public var location: String?
     public var isPublic: Int?
-    public var games: [Int]?
-    public var rsvps: [RSVP]?
+    public var activities: [Int]?
+    public var attendees: [RSVP]?
     public var createdAt: Date?
     public var updatedAt: Date?
 }
@@ -33,8 +33,8 @@ extension Event: JSONAble {
         dict["emoji"] = emoji != nil ? emoji : nilValue
         dict["description"] = description != nil ? description : nilValue
         dict["location"] = location != nil ? location : nilValue
-        dict["activities"] = games != nil ? games : nilValue
-        dict["attendees"] = rsvps != nil ? rsvps!.toJSON().object : nilValue
+        dict["activities"] = activities != nil ? activities : nilValue
+        dict["attendees"] = attendees != nil ? attendees!.toJSON().object : nilValue
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
