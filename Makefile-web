@@ -35,6 +35,7 @@ web_clean:
 web_unit_test:
 	$(TEST_COMMAND) -s EventsTests.HandlersTests
 	$(TEST_COMMAND) -s EventsTests.QueryResultAdaptorTests
+	$(TEST_COMMAND) -s EventsTests.EventMySQLDataAccessorTests
 
 web_functional_test:
 	$(TEST_COMMAND) -s FunctionalTests.FunctionalTests
