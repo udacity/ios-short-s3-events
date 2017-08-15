@@ -5,6 +5,9 @@ import MySQL
 public protocol EventMySQLDataAccessorProtocol {
     func getEvents(withID id: String) throws -> [Event]?
     func getEvents() throws -> [Event]?
+    func createEvent(_ event: Event) throws -> Bool
+    func updateEvent(_ event: Event) throws -> Bool
+    func deleteEvent(withID id: String) throws -> Bool    
 }
 
 // MARK: - EventMySQLDataAccessor: EventMySQLDataAccessorProtocol
