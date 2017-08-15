@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import ActivitiesTests
+@testable import EventsTests
 @testable import FunctionalTests
 
 XCTMain([])
