@@ -87,12 +87,57 @@ public class Handlers {
     // MARK: PUT
 
     public func putEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let updateEvent = Event(
+            id: Int(id),
+            name: json["name"].string,
+            emoji: json["emoji"].string,
+            description: json["description"].string,
+            host: json["host"].int,
+            startTime: nil,
+            location: json["location"].string,
+            isPublic: json["public"].int,
+            games: nil, rsvps: nil,
+            createdAt: nil, updatedAt: nil)
+
+        let missingParameters = updateEvent.validateParameters(
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
         Log.info("perform put")
     }
 
     // MARK: DELETE
 
     public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
         Log.info("perform delete")
     }
 }

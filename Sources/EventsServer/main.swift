@@ -48,11 +48,11 @@ router.post("/events", handler: handlers.postEvent)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-//router.put("/events/:id", handler: handlers.putEvent)
+router.put("/events/:id", handler: handlers.putEvent)
 
 // DELETE
 router.delete("/*", middleware: CheckRequestMiddleware(method: .delete))
-//router.delete("/events/:id", handler: handlers.deleteEvent)
+router.delete("/events/:id", handler: handlers.deleteEvent)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)
