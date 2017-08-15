@@ -3,4 +3,8 @@ import XCTest
 @testable import EventsTests
 @testable import FunctionalTests
 
-XCTMain([])
+XCTMain([
+    testCase(HandlersTests.allTests),
+    testCase(FunctionalTests.allTests)
+  ]
+)
