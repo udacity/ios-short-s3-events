@@ -29,9 +29,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Event'
-        400:
-          $ref: "#/responses/BadRequest"
+              $ref: '#/definitions/GetEvent'
         401:
           $ref: "#/responses/Unauthorized"
     post:
@@ -43,18 +41,20 @@ paths:
           description: Data for a new event.
           required: true
           schema:
-            $ref: '#/definitions/NewEvent'
+            $ref: '#/definitions/PostEvent'
       responses:
         201:
-          description: Resource created.
+          description: Event created.
           schema:
-            $ref: '#/definitions/Event'
+            $ref: '#/definitions/Message'
+        304:
+          $ref: "#/responses/NotModified"            
         400:
-          $ref: "#/responses/BadRequest"
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
-        404:
-          $ref: "#/responses/NotFound"
   /events/{id}:
     get:
       description: Returns event with ID.
@@ -70,13 +70,40 @@ paths:
         200:
           description: Successful response.
           schema:
-            $ref: '#/definitions/Event'
-        400:
-          $ref: "#/responses/BadRequest"
+            $ref: '#/definitions/GetEvent'
         401:
           $ref: "#/responses/Unauthorized"
         404:
           $ref: "#/responses/NotFound"
+    put:
+      description: Updates an event with ID.
+      summary: Updates an event with ID.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to fetch
+          required: true
+          type: integer
+          format: int64
+        - name: event
+          in: body
+          description: Data to update an existing event.
+          required: true
+          schema:
+            $ref: '#/definitions/PostEvent'  
+      responses:
+        200:
+          description: Activity updated.
+          schema:
+            $ref: '#/definitions/Message'
+        304:
+          $ref: "#/responses/NotModified"            
+        400:
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'
+        401:
+          $ref: "#/responses/Unauthorized"          
     delete:
       description: Deletes event with ID.
       summary: Deletes event with ID.
@@ -88,33 +115,35 @@ paths:
           type: integer
           format: int64
       responses:
-        200:
-          description: Successful response.
+        204:
+          description: Activity deleted.
           schema:
-            $ref: '#/definitions/Event'
+            $ref: '#/definitions/Message'
+        304:
+          $ref: "#/responses/NotModified"              
+        400:
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'           
         401:
           $ref: "#/responses/Unauthorized"
-        404:
-          $ref: "#/responses/NotFound"
 
 responses:
+  NoContent:
+    description: The request was fulfilled, but nothing to return.
   BadRequest:
     description: Invalid request.
-    schema:
-      $ref: "#/definitions/Error"
+  NotModified:
+    description: The specified resource was not modified.
   NotFound:
     description: The specified resource was not found.
-    schema:
-      $ref: "#/definitions/Error"
   Unauthorized:
     description: Unauthorized.
-    schema:
-      $ref: "#/definitions/Error"
 
 definitions:
-  Event:
+  GetEvent:
     allOf:
-      - $ref: '#/definitions/NewEvent'
+      - $ref: '#/definitions/ResponseEvent'
       - required:
         - id
         properties:
@@ -123,7 +152,42 @@ definitions:
             description: ID of event.
             readOnly: true
             default: "1"
-  NewEvent:
+  PostEvent:
+    allOf:
+      - $ref: '#/definitions/BaseEvent'
+      - type: object
+        properties:
+          activities:
+            type: array
+            description: IDs of activities for event.
+            readOnly: true
+            items:
+              type: string
+              default: "3"
+        required:
+          - activities
+  ResponseEvent:
+    allOf:
+      - $ref: '#/definitions/BaseEvent'
+      - type: object
+        properties:
+          attendees:
+            type: array
+            description: RSVPs for event.
+            readOnly: true
+            items:
+              $ref: '#/definitions/RSVP'
+          activities:
+            type: array
+            description: IDs of activities for event.
+            readOnly: true
+            items:
+              type: string
+              default: "3"
+        required:
+          - attendees
+          - activities
+  BaseEvent:
     type: object
     properties:
       name:
@@ -165,20 +229,6 @@ definitions:
         description: Date event was created.
         format: YYYY-mm-dd HH:mm:ss
         default: "2017-07-24 20:43:51"
-      attendees:
-        type: array
-        description: IDs of users attending event.
-        readOnly: true
-        items:
-          type: string
-          default: "2"
-      activities:
-        type: array
-        description: IDs of activities for event.
-        readOnly: true
-        items:
-          type: string
-          default: "3"
     required:
       - name
       - emoji
@@ -189,21 +239,37 @@ definitions:
       - public
       - updated_at
       - created_at
-      - attendees
-      - activities
-  Error:
+  RSVP:
     type: object
     properties:
-      code:
+      event_id:
         type: integer
-        description: Error status code.
-        format: int32
+        description: Event's ID.
+        default: "1"
+      user_id:
+        type: integer
+        description: User's ID.
+        default: "1"
+      accepted:
+        type: boolean
+        description: Is the user coming to the event?
+        default: true
+      comment:
+        type: string
+        description: Response to RSVP.
+        default: "I'm coming"
+    required:
+      - event_id
+      - user_id
+      - accepted
+      - comment
+  Message:
+    type: object
+    properties:
       message:
         type: string
-        description: Error description.
+        description: A message.
     required:
-      - code
       - message
     example:
-      code: 1
-      message: "There was an error."
+      message: "A message describing the HTTP status code."
