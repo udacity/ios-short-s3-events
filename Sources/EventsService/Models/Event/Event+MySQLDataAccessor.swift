@@ -15,9 +15,12 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     let pool: MySQLConnectionPoolProtocol
 
-    let selectEvents = MySQLQueryBuilder()
-            .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
-            "location", "public", "created_at", "updated_at"], table: "events")
+    let selectQuery = "SELECT *, events.id AS master_id " +
+                "FROM events " +
+                "LEFT JOIN event_games " +
+                "ON events.id = event_games.event_id " +
+                "LEFT JOIN rsvps " +
+                "ON events.id = rsvps.event_id"
 
     // MARK: Initializer
 
@@ -28,20 +31,14 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     // MARK: Queries
 
     public func getEvents(withID id: String) throws -> [Event]? {
-        let query = "SELECT *, events.id AS master_id " +
-                    "FROM events " +
-                    "LEFT JOIN event_games " +
-                    "ON events.id = event_games.event_id " +
-                    "LEFT JOIN rsvps " +
-                    "ON events.id = rsvps.event_id " +
-                    "WHERE events.id=\(id)"
+        let query = selectQuery + " WHERE events.id=\(id)"
         let result = try execute(query: query)
         let events = result.toEvents()
         return (events.count == 0) ? nil : events
     }
 
     public func getEvents() throws -> [Event]? {
-        let result = try execute(builder: selectEvents)
+        let result = try execute(query: selectQuery)
         let events = result.toEvents()
         return (events.count == 0) ? nil : events
     }

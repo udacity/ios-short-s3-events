@@ -47,4 +47,51 @@ public class Handlers {
 
         try response.send(json: events!.toJSON()).status(.OK).end()
     }
+
+    // MARK: POST
+
+    public func postEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let newEvent = Event(
+            id: nil,
+            name: json["name"].string,
+            emoji: json["emoji"].string,
+            description: json["description"].string,
+            host: json["host"].int,
+            startTime: nil,
+            location: json["location"].string,
+            isPublic: json["public"].int,
+            games: nil, rsvps: nil,
+            createdAt: nil, updatedAt: nil)
+
+        let missingParameters = newEvent.validate()
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        Log.info("perform post")
+    }
+
+    // MARK: PUT
+
+    public func putEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        Log.info("perform put")
+    }
+
+    // MARK: DELETE
+
+    public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        Log.info("perform delete")
+    }
 }
