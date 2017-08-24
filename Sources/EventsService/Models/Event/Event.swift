@@ -1,5 +1,6 @@
 import Foundation
 import SwiftyJSON
+import LoggerAPI
 
 // MARK: - Event
 
@@ -12,6 +13,8 @@ public struct Event {
     public var startTime: Date?
     public var location: String?
     public var isPublic: Int?
+    public var activities: [Int]?
+    public var attendees: [RSVP]?
     public var createdAt: Date?
     public var updatedAt: Date?
 }
@@ -20,27 +23,62 @@ public struct Event {
 
 extension Event: JSONAble {
     public func toJSON() -> JSON {
+        var dict = [String: Any]()
+        let nilValue: Any? = nil
+
+        dict["id"] = id != nil ? id : nilValue
+        dict["public"] = isPublic != nil ? isPublic : nilValue
+        dict["host"] = host != nil ? host : nilValue
+        dict["name"] = name != nil ? name : nilValue
+        dict["emoji"] = emoji != nil ? emoji : nilValue
+        dict["description"] = description != nil ? description : nilValue
+        dict["location"] = location != nil ? location : nilValue
+        dict["activities"] = activities != nil ? activities : nilValue
+        dict["attendees"] = attendees != nil ? attendees!.toJSON().object : nilValue
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
-        var dict = [String: Any]()
-        let nilString: String? = nil
-        let nilInt: Int? = nil
-        let nilDate: Date? = nil
-
-        dict["id"] = id != nil ? id : nilInt
-        dict["public"] = isPublic != nil ? isPublic : nilInt
-        dict["host"] = host != nil ? host : nilInt
-
-        dict["name"] = name != nil ? name : nilString
-        dict["emoji"] = emoji != nil ? emoji : nilString
-        dict["description"] = description != nil ? description : nilString
-        dict["location"] = location != nil ? location : nilString
-
-        dict["start_time"] = startTime != nil ? dateFormatter.string(from: startTime!) : nilDate
-        dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilDate
-        dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilDate
+        dict["start_time"] = startTime != nil ? dateFormatter.string(from: startTime!) : nilValue
+        dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilValue
+        dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilValue
 
         return JSON(dict)
+    }
+}
+
+// MARK: - Event (MySQLRow)
+
+extension Event {
+    func toMySQLRow() -> ([String: Any]) {
+        var data = [String: Any]()
+
+        data["name"] = name
+        data["emoji"] = emoji
+        data["description"] = description
+        data["host"] = host
+        data["start_time"] = startTime
+        data["location"] = location
+        data["is_public"] = isPublic
+
+        return data
+    }
+}
+
+// MARK: - Event (Validate)
+
+extension Event {
+    public func validateParameters(_ parameters: [String]) -> [String] {
+        var missingParameters = [String]()
+        let mirror = Mirror(reflecting: self)
+
+        for (name, value) in mirror.children {
+            guard let name = name, parameters.contains(name) else { continue }
+            if "\(value)" == "nil" {
+                missingParameters.append("\(name)")
+            }
+        }
+
+        return missingParameters
     }
 }

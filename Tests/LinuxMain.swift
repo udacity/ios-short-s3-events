@@ -1,6 +1,12 @@
 import XCTest
 
-@testable import ActivitiesTests
+@testable import EventsTests
 @testable import FunctionalTests
 
-XCTMain([])
+XCTMain([
+    testCase(HandlersTests.allTests),
+    testCase(QueryResultAdaptorTests.allTests),
+    testCase(EventMySQLDataAccessorTests.allTests),
+    testCase(FunctionalTests.allTests)
+  ]
+)

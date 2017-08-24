@@ -10,12 +10,12 @@ public class Handlers {
 
     // MARK: Properties
 
-    let connectionPool: MySQLConnectionPoolProtocol
+    let dataAccessor: EventMySQLDataAccessorProtocol
 
     // MARK: Initializer
 
-    public init(connectionPool: MySQLConnectionPoolProtocol) {
-        self.connectionPool = connectionPool
+    public init(dataAccessor: EventMySQLDataAccessorProtocol) {
+        self.dataAccessor = dataAccessor
     }
 
     // MARK: OPTIONS
@@ -31,38 +31,113 @@ public class Handlers {
     public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         let id = request.parameters["id"]
-        try safeDBQuery(response: response) { (accessor: EventMySQLDataAccessor) in
 
-            var events: [Event]?
+        var events: [Event]?
 
-            if let id = id {
-                events = try accessor.getEvents(withID: id)
-            } else {
-                events = try accessor.getEvents()
-            }
-
-            if events == nil {
-                try response.status(.notFound).end()
-                return
-            }
-
-            try response.send(json: events!.toJSON()).status(.OK).end()
+        if let id = id {
+            events = try dataAccessor.getEvents(withID: id)
+        } else {
+            events = try dataAccessor.getEvents()
         }
+
+        if events == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
-    // MARK: Utility
+    // MARK: POST
 
-    // execute queries safely and return error on failure
-    private func safeDBQuery(response: RouterResponse,
-                             block: @escaping ((_: EventMySQLDataAccessor) throws -> Void)) throws {
-        do {
-            try connectionPool.getConnection { (connection: MySQLConnectionProtocol) in
-                    let dataAccessor = EventMySQLDataAccessor(connection: connection)
-                    try block(dataAccessor)
-            }
-        } catch {
-            Log.error(error.localizedDescription)
-            try response.status(.internalServerError).end()
+    public func postEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
         }
+
+        let newEvent = Event(
+            id: nil,
+            name: json["name"].string,
+            emoji: json["emoji"].string,
+            description: json["description"].string,
+            host: json["host"].int,
+            startTime: nil,
+            location: json["location"].string,
+            isPublic: json["public"].int,
+            activities: nil, attendees: nil,
+            createdAt: nil, updatedAt: nil)
+
+        let missingParameters = newEvent.validateParameters(
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        Log.info("perform post")
+    }
+
+    // MARK: PUT
+
+    public func putEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let updateEvent = Event(
+            id: Int(id),
+            name: json["name"].string,
+            emoji: json["emoji"].string,
+            description: json["description"].string,
+            host: json["host"].int,
+            startTime: nil,
+            location: json["location"].string,
+            isPublic: json["public"].int,
+            activities: nil, attendees: nil,
+            createdAt: nil, updatedAt: nil)
+
+        let missingParameters = updateEvent.validateParameters(
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        Log.info("perform put")
+    }
+
+    // MARK: DELETE
+
+    public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let _ = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        Log.info("perform delete")
     }
 }
