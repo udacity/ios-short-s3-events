@@ -131,7 +131,7 @@ public class Handlers {
 
     public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let id = request.parameters["id"] else {
+        guard let _ = request.parameters["id"] else {
             Log.error("id (path parameter) missing")
             try response.send(json: JSON(["message": "id (path parameter) missing"]))
                         .status(.badRequest).end()

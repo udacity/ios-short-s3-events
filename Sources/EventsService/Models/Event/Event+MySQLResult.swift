@@ -13,26 +13,32 @@ public extension MySQLResultProtocol {
 
         while case let row? = self.nextResult() {
 
-            if let id = row["master_id"] as? Int {
+            // Scan over rows with event.id
+            if let id = row["id"] as? Int {
+
+                // Create new event entry if DNE
                 if eventsDictionary[id] == nil {
                     eventsDictionary[id] = Event()
                 }
-                eventsDictionary[id]?.id = id
 
                 if let activityID = row["activity_id"] as? Int {
+                    // Create new activities array if DNE
                     if eventsDictionary[id]?.activities == nil {
                         eventsDictionary[id]?.activities = [Int]()
                     }
+                    // Append non-duplicate activities
                     if eventsDictionary[id]?.activities?.contains(activityID) == false {
                         eventsDictionary[id]?.activities?.append(activityID)
                     }
                 }
 
                 if let userID = row["user_id"] as? Int {
+                    // Create new RSVP for userID
                     if eventsDictionary[id]?.attendees == nil {
                         eventsDictionary[id]?.attendees = [RSVP]()
                         usersAttending.append(userID)
                     }
+                    // Append non-duplicate RSVPs
                     if usersAttending.contains(userID) == false {
                         var rsvp = RSVP()
                         rsvp.userID = userID
@@ -43,8 +49,13 @@ public extension MySQLResultProtocol {
                     }
                 }
 
+                eventsDictionary[id]?.id = id
                 eventsDictionary[id]?.host = row["host"] as? Int
                 eventsDictionary[id]?.isPublic = row["is_public"] as? Int
+                eventsDictionary[id]?.name = row["name"] as? String
+                eventsDictionary[id]?.emoji = row["emoji"] as? String
+                eventsDictionary[id]?.description = row["description"] as? String
+                eventsDictionary[id]?.location = row["location"] as? String
 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -63,14 +74,8 @@ public extension MySQLResultProtocol {
                    let updatedAt = dateFormatter.date(from: updatedAtString) {
                        eventsDictionary[id]?.updatedAt = updatedAt
                 }
-
-                eventsDictionary[id]?.name = row["name"] as? String
-                eventsDictionary[id]?.emoji = row["emoji"] as? String
-                eventsDictionary[id]?.description = row["description"] as? String
-                eventsDictionary[id]?.location = row["location"] as? String
-
             } else {
-                Log.error("event_id not found in \(row)")
+                Log.error("event.id not found in \(row)")
             }
         }
 
