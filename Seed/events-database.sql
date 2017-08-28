@@ -92,7 +92,7 @@ DROP TABLE IF EXISTS `rsvps`;
 
 CREATE TABLE `rsvps` (
   `id` int(6) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(6) unsigned NOT NULL,
+  `user_id` varchar(50) NOT NULL,
   `event_id` int(6) unsigned NOT NULL,
   `accepted` tinyint(1) DEFAULT NULL,
   `comment` varchar(255) DEFAULT NULL,
@@ -108,8 +108,8 @@ CREATE TABLE `rsvps` (
 LOCK TABLES `rsvps` WRITE;
 /*!40000 ALTER TABLE `rsvps` DISABLE KEYS */;
 INSERT INTO `rsvps` VALUES
-(1,1,1,1,'Ill be there!','2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(2,2,1,1,'Im coming to the event!','2017-07-24 20:43:51','2017-07-24 20:43:51');
+(1,'1',1,1,'Ill be there!','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(2,'2',1,1,'Im coming to the event!','2017-07-24 20:43:51','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `rsvps` ENABLE KEYS */;
 UNLOCK TABLES;
 

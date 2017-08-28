@@ -1,4 +1,5 @@
 import MySQL
+import LoggerAPI
 
 // MARK: - EventMySQLDataAccessorProtocol
 
@@ -50,8 +51,6 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 
-        print(selectQuery.build())
-
         let result = try execute(builder: selectQuery)
         let events = result.toEvents()
         return (events.count == 0) ? nil : events
@@ -64,10 +63,12 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()
             .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
-            
+        
         let selectQuery = selectEvents
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
+
+        Log.info(selectQuery.build())
 
         let result = try execute(builder: selectQuery)
         let events = result.toEvents()

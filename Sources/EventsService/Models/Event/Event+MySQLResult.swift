@@ -9,7 +9,7 @@ public extension MySQLResultProtocol {
     public func toEvents() -> [Event] {
 
         var eventsDictionary = [Int:Event]()
-        var usersAttending = [Int]()
+        var usersAttending = [String]()
 
         while case let row? = self.nextResult() {
 
@@ -32,7 +32,7 @@ public extension MySQLResultProtocol {
                     }
                 }
 
-                if let userID = row["user_id"] as? Int {
+                if let userID = row["user_id"] as? String {
                     // Create new RSVP for userID
                     if eventsDictionary[id]?.attendees == nil {
                         eventsDictionary[id]?.attendees = [RSVP]()

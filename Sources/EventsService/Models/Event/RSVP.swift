@@ -4,7 +4,7 @@ import SwiftyJSON
 // MARK: - RSVP
 
 public struct RSVP {
-    public var userID: Int?
+    public var userID: String?
     public var eventID: Int?
     public var accepted: Int?
     public var comment: String?
