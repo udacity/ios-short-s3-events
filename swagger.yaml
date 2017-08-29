@@ -147,6 +147,12 @@ paths:
           required: true
           type: integer
           format: int64
+        - name: rsvps
+          in: body
+          description: Attendees to invite.
+          required: true
+          schema:
+            $ref: '#/definitions/Attendees'            
       responses:
         201:
           description: Users invited.
@@ -221,6 +227,18 @@ definitions:
               default: "3"
         required:
           - activities
+  Attendees:
+    type: object
+    properties:
+      attendees:
+        type: array
+        description: IDs of users to invite to event.
+        readOnly: true
+        items:
+          type: string
+          default: "4"
+    required:
+      - attendees
   ResponseEvent:
     allOf:
       - $ref: '#/definitions/BaseEvent'
