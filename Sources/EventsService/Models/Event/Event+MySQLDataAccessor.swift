@@ -8,6 +8,7 @@ public protocol EventMySQLDataAccessorProtocol {
     func getEvents() throws -> [Event]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
+    func patchEventRSVPs(withEvent event: Event) throws -> Bool
     func deleteEvent(withID id: String) throws -> Bool
 }
 
@@ -97,6 +98,48 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     public func updateEvent(_ event: Event) throws -> Bool {
         return false
+    }
+
+    public func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+        var result: MySQLResultProtocol
+
+        guard let connection = try pool.getConnection() as? MySQLConnection else {
+            Log.error("could not get a connection")
+            return false
+        }
+        defer { pool.releaseConnection(connection) }
+
+        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+            Log.error("could not patch event rsvps: \(message)")
+            try! connection.rollbackTransaction()
+            return false
+        }
+
+        connection.startTransaction()
+
+        do {
+            if let attendees = event.attendees {
+                for rsvp in attendees {
+                    let insertRSVPQuery = MySQLQueryBuilder()
+                        .insert(data: [
+                            "user_id": rsvp.userID!,
+                            "event_id": event.id!,
+                            "accepted": -1,
+                            "comment": ""
+                        ], table: "rsvps")
+                    result = try connection.execute(builder: insertRSVPQuery)
+                    if result.affectedRows < 1 {
+                        return rollbackEventTransaction(withConnection: connection, message: "failed to insert \(rsvp) into rsvps")
+                    }
+                }
+            }
+            try connection.commitTransaction()
+
+        } catch {
+            return rollbackEventTransaction(withConnection: connection, message: "patchEventRSVPs failed")
+        }
+
+        return true
     }
 
     public func deleteEvent(withID id: String) throws -> Bool {

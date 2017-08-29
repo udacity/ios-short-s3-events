@@ -50,6 +50,10 @@ router.post("/events", handler: handlers.postEvent)
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
 router.put("/events/:id", handler: handlers.putEvent)
 
+// PATCH
+router.patch("/*", middleware: CheckRequestMiddleware(method: .patch))
+router.patch("/rsvps/:id", handler: handlers.patchEventRSVPs)
+
 // DELETE
 router.delete("/*", middleware: CheckRequestMiddleware(method: .delete))
 router.delete("/events/:id", handler: handlers.deleteEvent)
