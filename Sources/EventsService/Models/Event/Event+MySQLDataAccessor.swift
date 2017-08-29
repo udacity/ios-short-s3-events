@@ -101,6 +101,9 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     }
 
     public func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+        let selectEventID = MySQLQueryBuilder()
+            .select(fields: ["id"], table: "events")
+            .wheres(statement: "id=?", parameters: "\(event.id!)")
         var result: MySQLResultProtocol
 
         guard let connection = try pool.getConnection() as? MySQLConnection else {
@@ -118,12 +121,17 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         connection.startTransaction()
 
         do {
+            result = try connection.execute(builder: selectEventID)
+            guard let row = result.nextResult(), let eventID = row["id"] as? Int else {
+                return rollbackEventTransaction(withConnection: connection, message: "event with id \(event.id!) does not exist")
+            }
+
             if let attendees = event.attendees {
                 for rsvp in attendees {
                     let insertRSVPQuery = MySQLQueryBuilder()
                         .insert(data: [
                             "user_id": rsvp.userID!,
-                            "event_id": event.id!,
+                            "event_id": eventID,
                             "accepted": -1,
                             "comment": ""
                         ], table: "rsvps")
