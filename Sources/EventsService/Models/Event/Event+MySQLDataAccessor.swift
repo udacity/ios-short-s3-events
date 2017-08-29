@@ -28,7 +28,71 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     // MARK: Queries
 
     public func createEvent(_ event: Event) throws -> Bool {
-        return false
+        let insertEventQuery = MySQLQueryBuilder()
+            .insert(data: event.toMySQLRow(), table: "events")
+        let selectLastEventID = MySQLQueryBuilder()
+            .select(fields: [MySQLFunction.LastInsertID], table: "events")
+        var result: MySQLResultProtocol
+
+        guard let connection = try pool.getConnection() as? MySQLConnection else {
+            Log.error("could not get a connection")
+            return false
+        }
+        defer { pool.releaseConnection(connection) }
+
+        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+            Log.error("could not create event: \(message)")
+            try! connection.rollbackTransaction()
+            return false
+        }
+
+        connection.startTransaction()
+
+        do {
+            result = try connection.execute(builder: insertEventQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to insert event")
+            }
+
+            result = try connection.execute(builder: selectLastEventID)
+            guard let row = result.nextResult(), let lastEventID = row["LAST_INSERT_ID()"] as? Int else {
+                return rollbackEventTransaction(withConnection: connection, message: "could not get last inserted event id")
+            }
+
+            if let activities = event.activities {
+                for activityID in activities {
+                    let insertEventGameQuery = MySQLQueryBuilder()
+                        .insert(data: ["activity_id": activityID, "event_id": lastEventID], table: "event_games")
+                    result = try connection.execute(builder: insertEventGameQuery)
+                    if result.affectedRows < 1 {
+                        return rollbackEventTransaction(withConnection: connection, message: "failed to insert \(activityID) into event_games")
+                    }
+                }
+            }
+
+            if let attendees = event.attendees {
+                for rsvp in attendees {
+                    let insertRSVPQuery = MySQLQueryBuilder()
+                        .insert(data: [
+                            "user_id": rsvp.userID!,
+                            "event_id": lastEventID,
+                            "accepted": -1,
+                            "comment": ""
+                        ], table: "rsvps")
+                    result = try connection.execute(builder: insertRSVPQuery)
+                    if result.affectedRows < 1 {
+                        return rollbackEventTransaction(withConnection: connection, message: "failed to insert \(rsvp) into rsvps")
+                    }
+                }
+            }
+
+            try connection.commitTransaction()
+
+        } catch {
+            return rollbackEventTransaction(withConnection: connection, message: "createEvent failed")
+        }
+
+        return true
     }
 
     public func updateEvent(_ event: Event) throws -> Bool {
@@ -36,7 +100,54 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     }
 
     public func deleteEvent(withID id: String) throws -> Bool {
-        return false
+        let deleteEventQuery = MySQLQueryBuilder()
+                .delete(fromTable: "events")
+                .wheres(statement: "id=?", parameters: "\(id)")
+        let deleteEventGameQuery = MySQLQueryBuilder()
+                .delete(fromTable: "event_games")
+                .wheres(statement: "event_id=?", parameters: "\(id)")
+        let deleteRSVPQuery = MySQLQueryBuilder()
+                .delete(fromTable: "rsvps")
+                .wheres(statement: "event_id=?", parameters: "\(id)")
+        var result: MySQLResultProtocol
+
+        guard let connection = try pool.getConnection() as? MySQLConnection else {
+            Log.error("could not get a connection")
+            return false
+        }
+        defer { pool.releaseConnection(connection) }
+
+        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+            Log.error("could not delete event: \(message)")
+            try! connection.rollbackTransaction()
+            return false
+        }
+
+        connection.startTransaction()
+
+        do {
+            result = try connection.execute(builder: deleteEventQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to delete event")
+            }
+
+            result = try connection.execute(builder: deleteEventGameQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to delete event games")
+            }
+
+            result = try connection.execute(builder: deleteRSVPQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to delete rsvps")
+            }
+
+            try connection.commitTransaction()
+
+        } catch {
+            return rollbackEventTransaction(withConnection: connection, message: "deleteEvent failed")
+        }
+
+        return true
     }
 
     public func getEvents(withID id: String) throws -> [Event]? {
@@ -63,12 +174,10 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()
             .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
-        
+
         let selectQuery = selectEvents
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
-
-        Log.info(selectQuery.build())
 
         let result = try execute(builder: selectQuery)
         let events = result.toEvents()

@@ -50,7 +50,7 @@ public extension MySQLResultProtocol {
                 }
 
                 eventsDictionary[id]?.id = id
-                eventsDictionary[id]?.host = row["host"] as? Int
+                eventsDictionary[id]?.host = row["host"] as? String
                 eventsDictionary[id]?.isPublic = row["is_public"] as? Int
                 eventsDictionary[id]?.name = row["name"] as? String
                 eventsDictionary[id]?.emoji = row["emoji"] as? String

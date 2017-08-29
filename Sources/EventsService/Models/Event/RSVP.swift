@@ -25,3 +25,18 @@ extension RSVP: JSONAble {
         return JSON(dict)
     }
 }
+
+// MARK: - RSVP (MySQLRow)
+
+extension RSVP {
+    func toMySQLRow() -> ([String: Any]) {
+        var data = [String: Any]()
+
+        data["user_id"] = userID
+        data["event_id"] = eventID
+        data["accepted"] = accepted
+        data["comment"] = comment
+
+        return data
+    }
+}

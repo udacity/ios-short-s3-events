@@ -59,20 +59,25 @@ public class Handlers {
             return
         }
 
+        let activities = json["activities"].arrayValue.map({$0.intValue})
+        let attendees = json["attendees"].arrayValue.map({
+            RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
+        })
+
         let newEvent = Event(
             id: nil,
             name: json["name"].string,
             emoji: json["emoji"].string,
             description: json["description"].string,
-            host: json["host"].int,
+            host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
             isPublic: json["public"].int,
-            activities: nil, attendees: nil,
+            activities: activities, attendees: attendees,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = newEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public", "activities", "attendees"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -81,7 +86,14 @@ public class Handlers {
             return
         }
 
-        Log.info("perform post")
+        let success = try dataAccessor.createEvent(newEvent)
+
+        if success {
+            try response.send(json: JSON(["message": "event created"])).status(.created).end()
+            return
+        }
+
+        try response.status(.notModified).end()
     }
 
     // MARK: PUT
@@ -107,7 +119,7 @@ public class Handlers {
             name: json["name"].string,
             emoji: json["emoji"].string,
             description: json["description"].string,
-            host: json["host"].int,
+            host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
             isPublic: json["public"].int,
@@ -131,13 +143,19 @@ public class Handlers {
 
     public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let _ = request.parameters["id"] else {
+        guard let id = request.parameters["id"] else {
             Log.error("id (path parameter) missing")
             try response.send(json: JSON(["message": "id (path parameter) missing"]))
                         .status(.badRequest).end()
             return
         }
 
-        Log.info("perform delete")
+        let success = try dataAccessor.deleteEvent(withID: id)
+
+        if success {
+            try response.send(json: JSON(["message": "resource deleted"])).status(.noContent).end()
+        }
+
+        try response.status(.notModified).end()
     }
 }

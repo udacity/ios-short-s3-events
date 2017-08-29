@@ -9,7 +9,7 @@ public struct Event {
     public var name: String?
     public var emoji: String?
     public var description: String?
-    public var host: Int?
+    public var host: String?
     public var startTime: Date?
     public var location: String?
     public var isPublic: Int?
@@ -59,7 +59,7 @@ extension Event {
         data["host"] = host
         data["start_time"] = startTime
         data["location"] = location
-        data["is_public"] = isPublic
+        data["public"] = isPublic
 
         return data
     }
