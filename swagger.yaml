@@ -99,10 +99,10 @@ paths:
           description: Data to update an existing event.
           required: true
           schema:
-            $ref: '#/definitions/PostEvent'  
+            $ref: '#/definitions/PutEvent'  
       responses:
         200:
-          description: Activity updated.
+          description: Event updated.
           schema:
             $ref: '#/definitions/Message'
         304:
@@ -112,7 +112,7 @@ paths:
           schema:
             $ref: '#/definitions/Message'
         401:
-          $ref: "#/responses/Unauthorized"          
+          $ref: "#/responses/Unauthorized"           
     delete:
       description: Deletes event with ID.
       summary: Deletes event with ID.
@@ -134,6 +134,30 @@ paths:
           description: Bad request.
           schema:
             $ref: '#/definitions/Message'           
+        401:
+          $ref: "#/responses/Unauthorized"
+  /rsvps/{id}:
+    post:
+      description: Invite new users to an event.
+      summary: Invite new users to an event.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event
+          required: true
+          type: integer
+          format: int64
+      responses:
+        201:
+          description: Users invited.
+          schema:
+            $ref: '#/definitions/Message'
+        304:
+          $ref: "#/responses/NotModified"            
+        400:
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
 
@@ -183,6 +207,20 @@ definitions:
         required:
           - activities
           - attendees
+  PutEvent:
+    allOf:
+      - $ref: '#/definitions/BaseEvent'
+      - type: object
+        properties:
+          activities:
+            type: array
+            description: IDs of activities for event.
+            readOnly: true
+            items:
+              type: string
+              default: "3"
+        required:
+          - activities
   ResponseEvent:
     allOf:
       - $ref: '#/definitions/BaseEvent'
