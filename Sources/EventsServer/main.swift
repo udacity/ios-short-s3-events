@@ -45,13 +45,13 @@ router.get("/events/:id", handler: handlers.getEvents)
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
 router.post("/events", handler: handlers.postEvent)
+router.post("/rsvps/:id", handler: handlers.postEventRSVPs)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
 router.put("/events/:id", handler: handlers.putEvent)
 
 // PATCH
-router.patch("/*", middleware: CheckRequestMiddleware(method: .patch))
 router.patch("/rsvps/:id", handler: handlers.patchEventRSVPs)
 
 // DELETE

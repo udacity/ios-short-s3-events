@@ -8,6 +8,7 @@ public protocol EventMySQLDataAccessorProtocol {
     func getEvents() throws -> [Event]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
+    func postEventRSVPs(withEvent event: Event) throws -> Bool
     func patchEventRSVPs(withEvent event: Event) throws -> Bool
     func deleteEvent(withID id: String) throws -> Bool
 }
@@ -100,7 +101,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return false
     }
 
-    public func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+    public func postEventRSVPs(withEvent event: Event) throws -> Bool {
         let selectEventID = MySQLQueryBuilder()
             .select(fields: ["id"], table: "events")
             .wheres(statement: "id=?", parameters: "\(event.id!)")
@@ -113,7 +114,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         defer { pool.releaseConnection(connection) }
 
         func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
-            Log.error("could not patch event rsvps: \(message)")
+            Log.error("could not post event rsvps: \(message)")
             try! connection.rollbackTransaction()
             return false
         }
@@ -144,10 +145,14 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             try connection.commitTransaction()
 
         } catch {
-            return rollbackEventTransaction(withConnection: connection, message: "patchEventRSVPs failed")
+            return rollbackEventTransaction(withConnection: connection, message: "postEventRSVPs failed")
         }
 
         return true
+    }
+
+    public func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+        return false
     }
 
     public func deleteEvent(withID id: String) throws -> Bool {

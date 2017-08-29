@@ -96,6 +96,56 @@ public class Handlers {
         try response.status(.notModified).end()
     }
 
+    public func postEventRSVPs(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let attendees = json["attendees"].arrayValue.map({
+            RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
+        })
+
+        let postEvent = Event(
+            id: Int(id),
+            name: nil,
+            emoji: nil,
+            description: nil,
+            host: nil,
+            startTime: nil,
+            location: nil,
+            isPublic: nil,
+            activities: nil, attendees: attendees,
+            createdAt: nil, updatedAt: nil)
+
+        let missingParameters = postEvent.validateParameters(["id", "attendees"])
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let success = try dataAccessor.postEventRSVPs(withEvent: postEvent)
+
+        if success {
+            try response.send(json: JSON(["message": "rsvps sent"])).status(.OK).end()
+        }
+
+        try response.status(.notModified).end()
+    }
+
     // MARK: PUT
 
     public func putEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -142,53 +192,6 @@ public class Handlers {
     // MARK: PATCH
 
     public func patchEventRSVPs(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-
-        guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
-                        .status(.badRequest).end()
-            return
-        }
-
-        guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
-                        .status(.badRequest).end()
-            return
-        }
-
-        let attendees = json["attendees"].arrayValue.map({
-            RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
-        })
-
-        let patchEvent = Event(
-            id: Int(id),
-            name: nil,
-            emoji: nil,
-            description: nil,
-            host: nil,
-            startTime: nil,
-            location: nil,
-            isPublic: nil,
-            activities: nil, attendees: attendees,
-            createdAt: nil, updatedAt: nil)
-
-        let missingParameters = patchEvent.validateParameters(["id", "attendees"])
-
-        if missingParameters.count != 0 {
-            Log.error("parameters missing \(missingParameters)")
-            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
-                        .status(.badRequest).end()
-            return
-        }
-
-        let success = try dataAccessor.patchEventRSVPs(withEvent: patchEvent)
-
-        if success {
-            try response.send(json: JSON(["message": "rsvps sent"])).status(.OK).end()
-        }
-
-        try response.status(.notModified).end()
     }
 
     // MARK: DELETE
