@@ -173,8 +173,16 @@ definitions:
             items:
               type: string
               default: "3"
+          attendees:
+            type: array
+            description: IDs of users to invite to event.
+            readOnly: true
+            items:
+              type: string
+              default: "4"
         required:
           - activities
+          - attendees
   ResponseEvent:
     allOf:
       - $ref: '#/definitions/BaseEvent'
