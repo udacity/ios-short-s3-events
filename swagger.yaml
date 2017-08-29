@@ -137,7 +137,7 @@ paths:
         401:
           $ref: "#/responses/Unauthorized"
   /rsvps/{id}:
-    post:
+    patch:
       description: Invite new users to an event.
       summary: Invite new users to an event.
       parameters:
