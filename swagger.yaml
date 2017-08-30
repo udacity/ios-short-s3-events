@@ -117,7 +117,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of event to fetch
+          description: ID of event to fetch.
           required: true
           type: integer
           format: int64
@@ -136,7 +136,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of event to fetch
+          description: ID of event to fetch.
           required: true
           type: integer
           format: int64
@@ -250,7 +250,7 @@ paths:
           format: int64     
         - name: rsvp_response
           in: body
-          description: Response to RSVP
+          description: Response to RSVP.
           required: true
           schema:
             $ref: '#/definitions/RSVPResponse'             
