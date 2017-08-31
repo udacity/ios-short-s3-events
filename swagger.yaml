@@ -406,9 +406,9 @@ definitions:
         type: string
         description: Location of event.
         default: "San Francisco"
-      public:
+      is_public:
         type: boolean
-        description: Is the event public or private?
+        description: Is the event public? If false, it's private.
         default: false
       created_at:
         type: string
@@ -427,7 +427,7 @@ definitions:
       - host
       - start_time
       - location
-      - public
+      - is_public
       - updated_at
       - created_at
   RSVP:
