@@ -93,7 +93,7 @@ paths:
                 default: "3"
             type:
               type: string
-              description: Type of events to filter.
+              description: Type of events to filter (upcoming|past).
               default: "upcoming"
             location:
               type: object
