@@ -75,6 +75,20 @@ CREATE TABLE `events` (
 ALTER TABLE `events` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 --
+-- Create stored procedure for calculating distance
+--
+
+DELIMITER //
+CREATE PROCEDURE events_within_miles_from_location
+(`location_latitude` double, `location_longitude` double, `miles` int)
+BEGIN
+  SELECT id, ( 3959 * acos( cos( radians( location_latitude ) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians( location_longitude ) ) + sin( radians( location_latitude ) ) * sin(radians(latitude)) ) ) AS distance
+  FROM events
+  HAVING distance < miles;
+END //
+DELIMITER ;
+
+--
 -- Dumping data for table `events`
 --
 
