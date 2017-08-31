@@ -69,16 +69,12 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let selectRSVPs = MySQLQueryBuilder()
             .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
 
-        let selectQuery = selectEvents.wheres(statement:"Id=?", parameters: id)
+        let selectQuery = selectEvents.wheres(statement:"id=?", parameters: id)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 
-        // FIXME: when seeking on a JOIN, the offset is incorrect!
-        // certain events will produce multiple rows based on rsvps and activities
         let result = try execute(builder: selectQuery)
-        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
-
-        let events = result.toEvents(pageSize: pageSize)
+        let events = result.toEvents()
         return (events.count == 0) ? nil : events
     }
 

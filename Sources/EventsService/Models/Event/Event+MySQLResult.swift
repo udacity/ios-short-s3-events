@@ -12,7 +12,7 @@ public extension MySQLResultProtocol {
         var usersInvited = [String]()
 
         while case let row? = self.nextResult() {
-
+            
             // Scan over rows with event.id
             if let id = row["id"] as? Int {
 

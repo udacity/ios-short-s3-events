@@ -41,7 +41,7 @@ public class Handlers {
 
         var events: [Event]?
 
-        if let id = id {
+        if let id = id {            
             events = try dataAccessor.getEvents(withID: id, pageSize: pageSize, pageNumber: pageNumber)
         } else {
             events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber)

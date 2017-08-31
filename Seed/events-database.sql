@@ -61,7 +61,7 @@ CREATE TABLE `events` (
   `name` varchar(50) NOT NULL,
   `emoji` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `description` text,
-  `host` int(6) unsigned NOT NULL,
+  `host` varchar(50) NOT NULL,
   `start_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `location` varchar(255) DEFAULT NULL,
   `latitude` double DEFAULT NULL,
@@ -81,10 +81,10 @@ ALTER TABLE `events` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
 INSERT INTO `events` VALUES
-(1,'Always Look On the Bright Side of the Planet Earth','🔥','Its game night! Lets play some games!',1,'2017-08-01 14:53:25','San Francisco',37.7749,-122.4194,1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),
-(2,'Event 2','🕹','Another event description',1,'2017-08-01 14:54:14','Huntsville',34.7304,-86.5861,1,'2017-08-01 14:54:14','2017-07-24 20:43:51'),
-(3,'Event 3','🔑','Who Did It?',1,'2017-08-01 14:54:14','London, UK',51.5074,-0.1278,1,'2017-08-01 14:54:14','2017-07-24 20:43:51'),
-(4,'Event 4','🏖','Board Games by the Beach',1,'2017-08-01 14:54:14','Los Angeles, CA',34.0522,-118.2437,1,'2017-08-01 14:54:14','2017-07-24 20:43:51');
+(1,'Always Look On the Bright Side of the Planet Earth','🔥','Its game night! Lets play some games!','1','2017-08-01 14:53:25','San Francisco',37.7749,-122.4194,1,'2017-08-01 14:53:25','2017-07-24 20:43:51'),
+(2,'Event 2','🕹','Another event description','1','2017-08-01 14:54:14','Huntsville',34.7304,-86.5861,1,'2017-08-01 14:54:14','2017-07-24 20:43:51'),
+(3,'Event 3','🔑','Who Did It?','1','2017-08-01 14:54:14','London, UK',51.5074,-0.1278,0,'2017-08-01 14:54:14','2017-07-24 20:43:51'),
+(4,'Event 4','🏖','Board Games by the Beach','1','2017-08-01 14:54:14','Los Angeles, CA',34.0522,-118.2437,0,'2017-08-01 14:54:14','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 
