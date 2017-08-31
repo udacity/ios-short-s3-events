@@ -64,6 +64,8 @@ paths:
             $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
   /events/search:
     get:
       description: List and filter events.
@@ -158,7 +160,9 @@ paths:
           schema:
             $ref: '#/definitions/Message'
         401:
-          $ref: "#/responses/Unauthorized"           
+          $ref: "#/responses/Unauthorized"     
+      security:
+        - JWT: []           
     delete:
       description: Delete an event.
       summary: Delete an event.
@@ -182,6 +186,8 @@ paths:
             $ref: '#/definitions/Message'           
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
   /events/{id}/rsvps:
     get:
       description: List RSVPs for an event.
@@ -231,6 +237,8 @@ paths:
             $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
   /events/{id}/rsvps/{rsvp_id}:
     put:
       description: Update a RSVP for an event.
@@ -267,6 +275,8 @@ paths:
             $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []           
 
 responses:
   NoContent:
@@ -279,6 +289,13 @@ responses:
     description: The specified resource was not found.
   Unauthorized:
     description: Unauthorized.
+
+securityDefinitions:
+  JWT:
+    type: apiKey
+    description: A Base64-encoded JSON web token.
+    name: "Authorization: Bearer"
+    in: header
 
 definitions:
   GetEvent:
