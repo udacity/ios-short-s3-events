@@ -2,7 +2,7 @@ swagger: '2.0'
 
 info:
   version: '1.0.0'
-  title: 'Events'
+  title: 'Events Microservice'
   description: 'Microservice for creating, retrieving, updating, and deleting events.'
   contact:
     name: Jarrod Parkes
@@ -21,17 +21,17 @@ produces:
 paths:
   /events:
     get:
-      description: Returns events.
-      summary: Returns events.
+      description: List events.
+      summary: List events.
       parameters:
-       - name: limit
+       - name: page_size
          in: query
          description: Number of events returned. Limit is 50.
          type: integer
-       - name: page
+       - name: page_number
          in: query
          description: Page number.
-         type: integer
+         type: integer  
       responses:
         200:
           description: Successful response.
@@ -42,8 +42,8 @@ paths:
         401:
           $ref: "#/responses/Unauthorized"
     post:
-      description: Creates a new event.
-      summary: Creates a new event.
+      description: Create a new event.
+      summary: Create a new event.
       parameters:
         - name: event
           in: body
@@ -64,14 +64,62 @@ paths:
             $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
+  /events/search:
+    get:
+      description: List and filter events.
+      summary: List and filter events.
+      parameters:
+       - name: page_size
+         in: query
+         description: Number of events returned. Limit is 50.
+         type: integer
+       - name: page_number
+         in: query
+         description: Page number.
+         type: integer
+       - name: filter
+         in: body
+         description: Properties for filtering search.
+         schema:
+           type: object
+           properties:
+            id:
+              type: array
+              description: IDs of events to filter.
+              items:
+                type: string
+                default: "3"
+            type:
+              type: string
+              description: Type of events to filter (upcoming|past).
+              default: "upcoming"
+            location:
+              type: object
+              description: Maximum distance to events to filter.
+              $ref: '#/definitions/Location'
+           required:
+              - id
+              - type
+              - location
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/GetEvent'
+        401:
+          $ref: "#/responses/Unauthorized"            
   /events/{id}:
     get:
-      description: Returns event with ID.
-      summary: Returns event with ID.
+      description: Get information about an event.
+      summary: Get information about an event.
       parameters:
         - name: id
           in: path
-          description: ID of event to fetch
+          description: ID of event to fetch.
           required: true
           type: integer
           format: int64
@@ -85,12 +133,12 @@ paths:
         404:
           $ref: "#/responses/NotFound"
     put:
-      description: Updates an event with ID.
-      summary: Updates an event with ID.
+      description: Update an event.
+      summary: Update an event.
       parameters:
         - name: id
           in: path
-          description: ID of event to fetch
+          description: ID of event to fetch.
           required: true
           type: integer
           format: int64
@@ -112,20 +160,22 @@ paths:
           schema:
             $ref: '#/definitions/Message'
         401:
-          $ref: "#/responses/Unauthorized"           
+          $ref: "#/responses/Unauthorized"     
+      security:
+        - JWT: []           
     delete:
-      description: Deletes event with ID.
-      summary: Deletes event with ID.
+      description: Delete an event.
+      summary: Delete an event.
       parameters:
         - name: id
           in: path
-          description: ID of event to delete
+          description: ID of event to delete.
           required: true
           type: integer
           format: int64
       responses:
         204:
-          description: Activity deleted.
+          description: Event deleted.
           schema:
             $ref: '#/definitions/Message'
         304:
@@ -136,23 +186,44 @@ paths:
             $ref: '#/definitions/Message'           
         401:
           $ref: "#/responses/Unauthorized"
-  /rsvps/{id}:
-    patch:
-      description: Invite new users to an event.
-      summary: Invite new users to an event.
+      security:
+        - JWT: []           
+  /events/{id}/rsvps:
+    get:
+      description: List RSVPs for an event.
+      summary: List RSVPs for an event.
       parameters:
         - name: id
           in: path
-          description: ID of event
+          description: ID of event to fetch RSVPs.
           required: true
           type: integer
           format: int64
-        - name: rsvps
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/RSVP'
+        401:
+          $ref: "#/responses/Unauthorized"          
+    post:
+      description: Create RSVPs for an event.
+      summary: Create RSVPs for an event.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to create RSVPs.
+          required: true
+          type: integer
+          format: int64
+        - name: invite_users
           in: body
-          description: Attendees to invite.
+          description: Users to invite.
           required: true
           schema:
-            $ref: '#/definitions/Attendees'            
+            $ref: '#/definitions/InviteUsers'            
       responses:
         201:
           description: Users invited.
@@ -166,6 +237,46 @@ paths:
             $ref: '#/definitions/Message'
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
+  /events/{id}/rsvps/{rsvp_id}:
+    put:
+      description: Update a RSVP for an event.
+      summary: Update a RSVP for an event.
+      parameters:
+        - name: id
+          in: path
+          description: ID of event.
+          required: true
+          type: integer
+          format: int64
+        - name: rsvp_id
+          in: path
+          description: ID of RSVP to update.
+          required: true
+          type: integer
+          format: int64     
+        - name: rsvp_response
+          in: body
+          description: Response to RSVP.
+          required: true
+          schema:
+            $ref: '#/definitions/RSVPResponse'             
+      responses:
+        200:
+          description: RSVP updated.
+          schema:
+            $ref: '#/definitions/Message'
+        304:
+          $ref: "#/responses/NotModified"            
+        400:
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'
+        401:
+          $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []           
 
 responses:
   NoContent:
@@ -178,6 +289,13 @@ responses:
     description: The specified resource was not found.
   Unauthorized:
     description: Unauthorized.
+
+securityDefinitions:
+  JWT:
+    type: apiKey
+    description: A Base64-encoded JSON web token.
+    name: "Authorization: Bearer"
+    in: header
 
 definitions:
   GetEvent:
@@ -203,7 +321,7 @@ definitions:
             items:
               type: string
               default: "3"
-          attendees:
+          invite_users:
             type: array
             description: IDs of users to invite to event.
             readOnly: true
@@ -212,7 +330,7 @@ definitions:
               default: "4"
         required:
           - activities
-          - attendees
+          - invite_users
   PutEvent:
     allOf:
       - $ref: '#/definitions/BaseEvent'
@@ -227,10 +345,10 @@ definitions:
               default: "3"
         required:
           - activities
-  Attendees:
+  InviteUsers:
     type: object
     properties:
-      attendees:
+      invite_users:
         type: array
         description: IDs of users to invite to event.
         readOnly: true
@@ -238,13 +356,13 @@ definitions:
           type: string
           default: "4"
     required:
-      - attendees
+      - invite_users
   ResponseEvent:
     allOf:
       - $ref: '#/definitions/BaseEvent'
       - type: object
         properties:
-          attendees:
+          rsvps:
             type: array
             description: RSVPs for event.
             readOnly: true
@@ -258,7 +376,7 @@ definitions:
               type: string
               default: "3"
         required:
-          - attendees
+          - rsvps
           - activities
   BaseEvent:
     type: object
@@ -288,9 +406,9 @@ definitions:
         type: string
         description: Location of event.
         default: "San Francisco"
-      public:
+      is_public:
         type: boolean
-        description: Is the event public or private?
+        description: Is the event public? If false, it's private.
         default: false
       created_at:
         type: string
@@ -309,16 +427,12 @@ definitions:
       - host
       - start_time
       - location
-      - public
+      - is_public
       - updated_at
       - created_at
   RSVP:
     type: object
     properties:
-      event_id:
-        type: integer
-        description: Event's ID.
-        default: "1"
       user_id:
         type: integer
         description: User's ID.
@@ -332,10 +446,47 @@ definitions:
         description: Response to RSVP.
         default: "I'm coming"
     required:
-      - event_id
       - user_id
       - accepted
       - comment
+  Location:
+    type: object
+    properties:
+      distance:
+        type: number
+        format: double
+        description: Distance in miles.
+      from_lat:
+        type: number
+        format: double
+        description: Signed latitude without compass direction [-90, 90]. Negative indicates south, positive indicates north.
+      from_lon:
+        type: number
+        format: double
+        description: Signed longitude without compass direction [-180, 180]. Negative indicates west, positive indicates east.
+    required:
+      - distance  
+      - from_lat
+      - from_lon
+    default:
+      distance: 10.0
+      from_lon: 0.0
+      from_lat: 0.0
+  RSVPResponse:
+    type: object
+    properties:
+      accepted:
+        type: boolean
+        description: True to accept RSVP. False to decline RSVP.
+      comment:
+        type: string
+        description: Describe response to RSVP.
+    required:
+      - accepted
+      - comment
+    default:
+      accepted: true
+      description: "I'm coming!"
   Message:
     type: object
     properties:
@@ -344,5 +495,5 @@ definitions:
         description: A message.
     required:
       - message
-    example:
+    default:
       message: "A message describing the HTTP status code."
