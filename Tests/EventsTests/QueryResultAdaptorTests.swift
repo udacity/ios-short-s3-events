@@ -6,7 +6,7 @@ public class QueryResultAdaptorTests: XCTestCase {
 
     public func testSQLResultReturnsEvent() {
         let queryResult = MockMySQLResult()
-        queryResult.results = [["master_id": 123 as Any]]
+        queryResult.results = [["id": 123 as Any]]
 
         var events = queryResult.toEvents()
         XCTAssertEqual(123, events[0].id)

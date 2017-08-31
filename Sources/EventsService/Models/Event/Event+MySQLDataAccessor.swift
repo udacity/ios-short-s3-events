@@ -36,13 +36,13 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             .select(fields: [MySQLFunction.LastInsertID], table: "events")
         var result: MySQLResultProtocol
 
-        guard let connection = try pool.getConnection() as? MySQLConnection else {
+        guard let connection = try pool.getConnection() else {
             Log.error("could not get a connection")
             return false
         }
         defer { pool.releaseConnection(connection) }
 
-        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+        func rollbackEventTransaction(withConnection: MySQLConnectionProtocol, message: String) -> Bool {
             Log.error("could not create event: \(message)")
             try! connection.rollbackTransaction()
             return false
@@ -104,16 +104,16 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func postEventRSVPs(withEvent event: Event) throws -> Bool {
         let selectEventID = MySQLQueryBuilder()
             .select(fields: ["id"], table: "events")
-            .wheres(statement: "id=?", parameters: "\(event.id!)")
+            .wheres(statement: "Id=?", parameters: "\(event.id!)")
         var result: MySQLResultProtocol
 
-        guard let connection = try pool.getConnection() as? MySQLConnection else {
+        guard let connection = try pool.getConnection() else {
             Log.error("could not get a connection")
             return false
         }
         defer { pool.releaseConnection(connection) }
 
-        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+        func rollbackEventTransaction(withConnection: MySQLConnectionProtocol, message: String) -> Bool {
             Log.error("could not post event rsvps: \(message)")
             try! connection.rollbackTransaction()
             return false
@@ -158,7 +158,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func deleteEvent(withID id: String) throws -> Bool {
         let deleteEventQuery = MySQLQueryBuilder()
                 .delete(fromTable: "events")
-                .wheres(statement: "id=?", parameters: "\(id)")
+                .wheres(statement: "Id=?", parameters: "\(id)")
         let deleteEventGameQuery = MySQLQueryBuilder()
                 .delete(fromTable: "event_games")
                 .wheres(statement: "event_id=?", parameters: "\(id)")
@@ -167,13 +167,13 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
                 .wheres(statement: "event_id=?", parameters: "\(id)")
         var result: MySQLResultProtocol
 
-        guard let connection = try pool.getConnection() as? MySQLConnection else {
+        guard let connection = try pool.getConnection() else {
             Log.error("could not get a connection")
             return false
         }
         defer { pool.releaseConnection(connection) }
 
-        func rollbackEventTransaction(withConnection: MySQLConnection, message: String) -> Bool {
+        func rollbackEventTransaction(withConnection: MySQLConnectionProtocol, message: String) -> Bool {
             Log.error("could not delete event: \(message)")
             try! connection.rollbackTransaction()
             return false
@@ -214,7 +214,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let selectRSVPs = MySQLQueryBuilder()
             .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
 
-        let selectQuery = selectEvents.wheres(statement:"id=?", parameters: id)
+        let selectQuery = selectEvents.wheres(statement:"Id=?", parameters: id)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 

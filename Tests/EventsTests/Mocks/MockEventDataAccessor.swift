@@ -17,6 +17,14 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
     var getEventError: Error?
     var getEventCalled: Bool = false
 
+    var postEventRSVPsReturn: Bool = false
+    var postEventRSVPsError: Error?
+    var postEventRSVPsCalled: Bool = false
+
+    var patchEventRSVPsReturn: Bool = false
+    var patchEventRSVPsError: Error?
+    var patchEventRSVPsCalled: Bool = false
+
     func createEvent(_ event: Event) throws -> Bool {
         createEventCalled = true
 
@@ -65,5 +73,25 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         }
 
         return getEventReturn
+    }
+
+    func postEventRSVPs(withEvent event: Event) throws -> Bool {
+        postEventRSVPsCalled = true
+
+        if let err = postEventRSVPsError {
+            throw err
+        }
+
+        return postEventRSVPsReturn
+    }
+
+    func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+        patchEventRSVPsCalled = true
+
+        if let err = patchEventRSVPsError {
+            throw err
+        }
+
+        return patchEventRSVPsReturn
     }
 }
