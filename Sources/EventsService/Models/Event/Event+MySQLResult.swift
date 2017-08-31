@@ -6,7 +6,7 @@ import Foundation
 
 public extension MySQLResultProtocol {
 
-    public func toEvents() -> [Event] {
+    public func toEvents(pageSize: Int = 10) -> [Event] {
 
         var eventsDictionary = [Int:Event]()
         var usersInvited = [String]()
@@ -58,7 +58,7 @@ public extension MySQLResultProtocol {
                 eventsDictionary[id]?.location = row["location"] as? String
                 eventsDictionary[id]?.latitude = row["latitude"] as? Double
                 eventsDictionary[id]?.longitude = row["longitude"] as? Double
-                
+
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
@@ -78,6 +78,11 @@ public extension MySQLResultProtocol {
                 }
             } else {
                 Log.error("event.id not found in \(row)")
+            }
+
+            // return collection limited by page size if specified
+            if pageSize > 0 && eventsDictionary.count == Int(pageSize) {
+                break
             }
         }
 

@@ -32,12 +32,19 @@ public class Handlers {
 
         let id = request.parameters["id"]
 
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
+            Log.error("could not initialize page_size and page_number")
+            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
         var events: [Event]?
 
         if let id = id {
-            events = try dataAccessor.getEvents(withID: id)
+            events = try dataAccessor.getEvents(withID: id, pageSize: pageSize, pageNumber: pageNumber)
         } else {
-            events = try dataAccessor.getEvents()
+            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber)
         }
 
         if events == nil {

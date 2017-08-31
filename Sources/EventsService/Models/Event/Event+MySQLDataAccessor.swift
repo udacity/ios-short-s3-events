@@ -4,8 +4,8 @@ import LoggerAPI
 // MARK: - EventMySQLDataAccessorProtocol
 
 public protocol EventMySQLDataAccessorProtocol {
-    func getEvents(withID id: String) throws -> [Event]?
-    func getEvents() throws -> [Event]?
+    func getEvents(pageSize: Int, pageNumber: Int) throws -> [Event]?
+    func getEvents(withID id: String, pageSize: Int, pageNumber: Int) throws -> [Event]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
     func postEventRSVPs(withEvent event: Event) throws -> Bool
@@ -28,6 +28,59 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     }
 
     // MARK: Queries
+
+    public func getEvents(pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+        // select event ids and apply pagination before doing joins
+        let selectEventIDs = MySQLQueryBuilder().select(fields: ["id"], table: "events")
+        var events = [Event]()
+
+        let simpleResults = try execute(builder: selectEventIDs)
+        simpleResults.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let simpleEvents = simpleResults.toEvents(pageSize: pageSize)
+        let ids = simpleEvents.map({String($0.id!)})
+
+        // once the ids are determind, perform the joins
+        if ids.count > 0 {
+            let selectEvents = MySQLQueryBuilder()
+                .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
+                    "location", "latitude", "longitude", "is_public"], table: "events")
+            let selectEventGames = MySQLQueryBuilder()
+                .select(fields: ["activity_id", "event_id"], table: "event_games")
+            let selectRSVPs = MySQLQueryBuilder()
+                .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
+            let selectQuery = selectEvents.wheres(statement:"id IN (?)", parameters: ids)
+                .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
+                .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
+
+            let result = try execute(builder: selectQuery)
+            events = result.toEvents()
+        }
+
+        return (events.count == 0) ? nil : events
+    }
+
+    public func getEvents(withID id: String, pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+        let selectEvents = MySQLQueryBuilder()
+            .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
+                "location", "latitude", "longitude", "is_public"], table: "events")
+        let selectEventGames = MySQLQueryBuilder()
+            .select(fields: ["activity_id", "event_id"], table: "event_games")
+        let selectRSVPs = MySQLQueryBuilder()
+            .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
+
+        let selectQuery = selectEvents.wheres(statement:"Id=?", parameters: id)
+            .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
+            .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
+
+        // FIXME: when seeking on a JOIN, the offset is incorrect!
+        // certain events will produce multiple rows based on rsvps and activities
+        let result = try execute(builder: selectQuery)
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let events = result.toEvents(pageSize: pageSize)
+        return (events.count == 0) ? nil : events
+    }
 
     public func createEvent(_ event: Event) throws -> Bool {
         let insertEventQuery = MySQLQueryBuilder()
@@ -206,42 +259,6 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
-    public func getEvents(withID id: String) throws -> [Event]? {
-        let selectEvents = MySQLQueryBuilder()
-            .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
-                "location", "latitude", "longitude", "is_public"], table: "events")
-        let selectEventGames = MySQLQueryBuilder()
-            .select(fields: ["activity_id", "event_id"], table: "event_games")
-        let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
-
-        let selectQuery = selectEvents.wheres(statement:"Id=?", parameters: id)
-            .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
-            .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
-
-        let result = try execute(builder: selectQuery)
-        let events = result.toEvents()
-        return (events.count == 0) ? nil : events
-    }
-
-    public func getEvents() throws -> [Event]? {
-        let selectEvents = MySQLQueryBuilder()
-            .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
-                "location", "latitude", "longitude", "is_public"], table: "events")
-        let selectEventGames = MySQLQueryBuilder()
-            .select(fields: ["activity_id", "event_id"], table: "event_games")
-        let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
-
-        let selectQuery = selectEvents
-            .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
-            .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
-
-        let result = try execute(builder: selectQuery)
-        let events = result.toEvents()
-        return (events.count == 0) ? nil : events
-    }
-
     // MARK: Utility
 
     func execute(builder: MySQLQueryBuilder) throws -> MySQLResultProtocol {
@@ -249,5 +266,9 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         defer { pool.releaseConnection(connection!) }
 
         return try connection!.execute(builder: builder)
+    }
+
+    func cacluateOffset(pageSize: Int, pageNumber: Int) -> Int64 {
+        return Int64(pageNumber > 1 ? pageSize * (pageNumber - 1) : 0)
     }
 }

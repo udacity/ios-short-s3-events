@@ -55,7 +55,7 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         return deleteEventReturn
     }
 
-    func getEvents(withID id: String) throws -> [Event]? {
+    func getEvents(withID id: String, pageSize: Int, pageNumber: Int) throws -> [Event]? {
         getEventCalled = true
 
         if let err = getEventError {
@@ -65,7 +65,7 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         return getEventReturn
     }
 
-    func getEvents() throws -> [Event]? {
+    func getEvents(pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
         getEventCalled = true
 
         if let err = getEventError {
