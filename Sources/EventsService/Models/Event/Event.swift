@@ -27,7 +27,7 @@ extension Event: JSONAble {
         let nilValue: Any? = nil
 
         dict["id"] = id != nil ? id : nilValue
-        dict["public"] = isPublic != nil ? isPublic : nilValue
+        dict["is_public"] = isPublic != nil ? isPublic : nilValue
         dict["host"] = host != nil ? host : nilValue
         dict["name"] = name != nil ? name : nilValue
         dict["emoji"] = emoji != nil ? emoji : nilValue
@@ -59,7 +59,7 @@ extension Event {
         data["host"] = host
         data["start_time"] = startTime
         data["location"] = location
-        data["public"] = isPublic
+        data["is_public"] = isPublic
 
         return data
     }

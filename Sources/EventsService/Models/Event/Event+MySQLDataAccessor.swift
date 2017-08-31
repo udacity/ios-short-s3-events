@@ -208,7 +208,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     public func getEvents(withID id: String) throws -> [Event]? {
         let selectEvents = MySQLQueryBuilder()
-            .select(fields: ["id", "name", "emoji", "description", "host", "start_time", "location", "public"], table: "events")
+            .select(fields: ["id", "name", "emoji", "description", "host", "start_time", "location", "is_public"], table: "events")
         let selectEventGames = MySQLQueryBuilder()
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()
@@ -225,7 +225,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     public func getEvents() throws -> [Event]? {
         let selectEvents = MySQLQueryBuilder()
-            .select(fields: ["id", "name", "emoji", "description", "host", "start_time", "location", "public"], table: "events")
+            .select(fields: ["id", "name", "emoji", "description", "host", "start_time", "location", "is_public"], table: "events")
         let selectEventGames = MySQLQueryBuilder()
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()

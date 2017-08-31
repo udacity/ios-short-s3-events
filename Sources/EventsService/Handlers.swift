@@ -72,7 +72,7 @@ public class Handlers {
             host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
-            isPublic: json["public"].int,
+            isPublic: json["is_public"].int,
             activities: activities, attendees: attendees,
             createdAt: nil, updatedAt: nil)
 
@@ -172,7 +172,7 @@ public class Handlers {
             host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
-            isPublic: json["public"].int,
+            isPublic: json["is_public"].int,
             activities: nil, attendees: nil,
             createdAt: nil, updatedAt: nil)
 
