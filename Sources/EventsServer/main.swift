@@ -39,8 +39,9 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/events", handler: handlers.getEvents)
+router.get("/events/search", handler: handlers.searchEvents)
 router.get("/events/:id", handler: handlers.getEvents)
+router.get("/events", handler: handlers.getEvents)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))

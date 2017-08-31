@@ -2,6 +2,12 @@ import Foundation
 import SwiftyJSON
 import LoggerAPI
 
+// MARK: - EventScheduleType
+
+public enum EventScheduleType: String {
+    case all, past, upcoming
+}
+
 // MARK: - Event
 
 public struct Event {

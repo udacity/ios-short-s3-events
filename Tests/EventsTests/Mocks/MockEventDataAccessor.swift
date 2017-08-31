@@ -65,7 +65,7 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         return getEventReturn
     }
 
-    func getEvents(pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+    func getEvents(pageSize: Int = 10, pageNumber: Int = 1, type: EventScheduleType = .all) throws -> [Event]? {
         getEventCalled = true
 
         if let err = getEventError {

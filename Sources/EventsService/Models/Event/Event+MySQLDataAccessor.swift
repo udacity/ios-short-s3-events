@@ -4,7 +4,7 @@ import LoggerAPI
 // MARK: - EventMySQLDataAccessorProtocol
 
 public protocol EventMySQLDataAccessorProtocol {
-    func getEvents(pageSize: Int, pageNumber: Int) throws -> [Event]?
+    func getEvents(pageSize: Int, pageNumber: Int, type: EventScheduleType) throws -> [Event]?
     func getEvents(withID id: String, pageSize: Int, pageNumber: Int) throws -> [Event]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
@@ -29,9 +29,20 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     // MARK: Queries
 
-    public func getEvents(pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+    public func getEvents(pageSize: Int = 10, pageNumber: Int = 1, type: EventScheduleType = .all) throws -> [Event]? {
         // select event ids and apply pagination before doing joins
-        let selectEventIDs = MySQLQueryBuilder().select(fields: ["id"], table: "events")
+        var selectEventIDs = MySQLQueryBuilder()
+            .select(fields: ["id"], table: "events")
+
+        switch type {
+        case .upcoming:
+            selectEventIDs = selectEventIDs.wheres(statement: "start_time >= CURDATE()", parameters: [])
+        case .past:            
+            selectEventIDs = selectEventIDs.wheres(statement: "start_time < CURDATE()", parameters: [])
+        default:
+            break
+        }
+
         var events = [Event]()
 
         let simpleResults = try execute(builder: selectEventIDs)
@@ -49,7 +60,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
                 .select(fields: ["activity_id", "event_id"], table: "event_games")
             let selectRSVPs = MySQLQueryBuilder()
                 .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
-            let selectQuery = selectEvents.wheres(statement:"id IN (?)", parameters: ids)
+            let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: ids)
                 .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
                 .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 

@@ -41,10 +41,36 @@ public class Handlers {
 
         var events: [Event]?
 
-        if let id = id {            
+        if let id = id {
             events = try dataAccessor.getEvents(withID: id, pageSize: pageSize, pageNumber: pageNumber)
         } else {
-            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber)
+            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
+        }
+
+        if events == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: events!.toJSON()).status(.OK).end()
+    }
+
+    public func searchEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
+            Log.error("could not initialize page_size and page_number")
+            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        var events: [Event]?
+
+        if let body = request.body, case let .json(json) = body, let filterType = json["type"].string {
+            let type = EventScheduleType(rawValue: filterType) ?? .all
+            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: type)
+        } else {
+            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
         }
 
         if events == nil {
