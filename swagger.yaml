@@ -41,6 +41,8 @@ paths:
               $ref: '#/definitions/GetEvent'
         401:
           $ref: "#/responses/Unauthorized"
+      security:
+        - JWT: []           
     post:
       description: Create a new event.
       summary: Create a new event.
@@ -111,7 +113,9 @@ paths:
             items:
               $ref: '#/definitions/GetEvent'
         401:
-          $ref: "#/responses/Unauthorized"            
+          $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []           
   /events/{id}:
     get:
       description: Get information about an event.
@@ -132,6 +136,8 @@ paths:
           $ref: "#/responses/Unauthorized"
         404:
           $ref: "#/responses/NotFound"
+      security:
+        - JWT: []           
     put:
       description: Update an event.
       summary: Update an event.
@@ -207,7 +213,9 @@ paths:
             items:
               $ref: '#/definitions/RSVP'
         401:
-          $ref: "#/responses/Unauthorized"          
+          $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []           
     post:
       description: Create RSVPs for an event.
       summary: Create RSVPs for an event.
