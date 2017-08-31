@@ -9,7 +9,7 @@ public extension MySQLResultProtocol {
     public func toEvents() -> [Event] {
 
         var eventsDictionary = [Int:Event]()
-        var usersAttending = [String]()
+        var usersInvited = [String]()
 
         while case let row? = self.nextResult() {
 
@@ -33,19 +33,19 @@ public extension MySQLResultProtocol {
                 }
 
                 if let userID = row["user_id"] as? String {
-                    // Create new RSVP for userID
-                    if eventsDictionary[id]?.attendees == nil {
-                        eventsDictionary[id]?.attendees = [RSVP]()
-                        usersAttending.append(userID)
+                    // Create RSVP array for event
+                    if eventsDictionary[id]?.rsvps == nil {
+                        eventsDictionary[id]?.rsvps = [RSVP]()
                     }
-                    // Append non-duplicate RSVPs
-                    if usersAttending.contains(userID) == false {
+                    // Append non-duplicate RSVPs (some will be duplicated during JOIN)
+                    if usersInvited.contains(userID) == false {
                         var rsvp = RSVP()
                         rsvp.userID = userID
                         rsvp.eventID = row["event_id"] as? Int
                         rsvp.accepted = row["accepted"] as? Int
                         rsvp.comment = row["comment"] as? String
-                        eventsDictionary[id]?.attendees?.append(rsvp)
+                        eventsDictionary[id]?.rsvps?.append(rsvp)
+                        usersInvited.append(userID)
                     }
                 }
 

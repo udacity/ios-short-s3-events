@@ -60,7 +60,7 @@ public class Handlers {
         }
 
         let activities = json["activities"].arrayValue.map({$0.intValue})
-        let attendees = json["attendees"].arrayValue.map({
+        let rsvps = json["rsvps"].arrayValue.map({
             RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
@@ -73,11 +73,11 @@ public class Handlers {
             startTime: nil,
             location: json["location"].string,
             isPublic: json["is_public"].int,
-            activities: activities, attendees: attendees,
+            activities: activities, rsvps: rsvps,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = newEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location", "is_public", "activities", "attendees"])
+            ["name", "emoji", "description", "host", "start_time", "location", "is_public", "activities", "rsvps"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -112,7 +112,7 @@ public class Handlers {
             return
         }
 
-        let attendees = json["attendees"].arrayValue.map({
+        let rsvps = json["rsvps"].arrayValue.map({
             RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
@@ -125,10 +125,10 @@ public class Handlers {
             startTime: nil,
             location: nil,
             isPublic: nil,
-            activities: nil, attendees: attendees,
+            activities: nil, rsvps: rsvps,
             createdAt: nil, updatedAt: nil)
 
-        let missingParameters = postEvent.validateParameters(["id", "attendees"])
+        let missingParameters = postEvent.validateParameters(["id", "rsvps"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -173,7 +173,7 @@ public class Handlers {
             startTime: nil,
             location: json["location"].string,
             isPublic: json["is_public"].int,
-            activities: nil, attendees: nil,
+            activities: nil, rsvps: nil,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateEvent.validateParameters(

@@ -72,8 +72,8 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
                 }
             }
 
-            if let attendees = event.attendees {
-                for rsvp in attendees {
+            if let rsvps = event.rsvps {
+                for rsvp in rsvps {
                     let insertRSVPQuery = MySQLQueryBuilder()
                         .insert(data: [
                             "user_id": rsvp.userID!,
@@ -127,8 +127,8 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
                 return rollbackEventTransaction(withConnection: connection, message: "event with id \(event.id!) does not exist")
             }
 
-            if let attendees = event.attendees {
-                for rsvp in attendees {
+            if let rsvps = event.rsvps {
+                for rsvp in rsvps {
                     let insertRSVPQuery = MySQLQueryBuilder()
                         .insert(data: [
                             "user_id": rsvp.userID!,

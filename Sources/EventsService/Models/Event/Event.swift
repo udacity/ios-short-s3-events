@@ -14,7 +14,7 @@ public struct Event {
     public var location: String?
     public var isPublic: Int?
     public var activities: [Int]?
-    public var attendees: [RSVP]?
+    public var rsvps: [RSVP]?
     public var createdAt: Date?
     public var updatedAt: Date?
 }
@@ -34,7 +34,7 @@ extension Event: JSONAble {
         dict["description"] = description != nil ? description : nilValue
         dict["location"] = location != nil ? location : nilValue
         dict["activities"] = activities != nil ? activities : nilValue
-        dict["attendees"] = attendees != nil ? attendees!.toJSON().object : nilValue
+        dict["rsvps"] = rsvps != nil ? rsvps!.toJSON().object : nilValue
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"

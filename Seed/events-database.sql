@@ -108,8 +108,8 @@ CREATE TABLE `rsvps` (
 LOCK TABLES `rsvps` WRITE;
 /*!40000 ALTER TABLE `rsvps` DISABLE KEYS */;
 INSERT INTO `rsvps` VALUES
-(1,'1',1,1,'Ill be there!','2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(2,'2',1,1,'Im coming to the event!','2017-07-24 20:43:51','2017-07-24 20:43:51');
+(1,'1',1,1,'I coming!','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(2,'2',1,0,'Sorry, maybe next time.','2017-07-24 20:43:51','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `rsvps` ENABLE KEYS */;
 UNLOCK TABLES;
 
