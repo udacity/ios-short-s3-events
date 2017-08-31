@@ -72,12 +72,14 @@ public class Handlers {
             host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
+            latitude: json["latitude"].double, longitude: json["longitude"].double,
             isPublic: json["is_public"].int,
             activities: activities, rsvps: rsvps,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = newEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location", "is_public", "activities", "rsvps"])
+            ["name", "emoji", "description", "host", "start_time", "location",
+                "latitude", "longitude", "is_public", "activities", "rsvps"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -124,6 +126,7 @@ public class Handlers {
             host: nil,
             startTime: nil,
             location: nil,
+            latitude: nil, longitude: nil,
             isPublic: nil,
             activities: nil, rsvps: rsvps,
             createdAt: nil, updatedAt: nil)
@@ -172,12 +175,14 @@ public class Handlers {
             host: json["host"].string,
             startTime: nil,
             location: json["location"].string,
+            latitude: json["latitude"].double, longitude: json["longitude"].double,
             isPublic: json["is_public"].int,
             activities: nil, rsvps: nil,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location", "is_public"])
+            ["name", "emoji", "description", "host", "start_time", "location",
+                "latitude", "longitude", "is_public"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")

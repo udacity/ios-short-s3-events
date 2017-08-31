@@ -56,7 +56,9 @@ public extension MySQLResultProtocol {
                 eventsDictionary[id]?.emoji = row["emoji"] as? String
                 eventsDictionary[id]?.description = row["description"] as? String
                 eventsDictionary[id]?.location = row["location"] as? String
-
+                eventsDictionary[id]?.latitude = row["latitude"] as? Double
+                eventsDictionary[id]?.longitude = row["longitude"] as? Double
+                
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 

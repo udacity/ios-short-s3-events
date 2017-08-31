@@ -12,6 +12,8 @@ public struct Event {
     public var host: String?
     public var startTime: Date?
     public var location: String?
+    public var latitude: Double?
+    public var longitude: Double?
     public var isPublic: Int?
     public var activities: [Int]?
     public var rsvps: [RSVP]?
@@ -33,6 +35,8 @@ extension Event: JSONAble {
         dict["emoji"] = emoji != nil ? emoji : nilValue
         dict["description"] = description != nil ? description : nilValue
         dict["location"] = location != nil ? location : nilValue
+        dict["latitude"] = latitude != nil ? latitude : nilValue
+        dict["longitude"] = longitude != nil ? longitude : nilValue
         dict["activities"] = activities != nil ? activities : nilValue
         dict["rsvps"] = rsvps != nil ? rsvps!.toJSON().object : nilValue
 
@@ -59,6 +63,8 @@ extension Event {
         data["host"] = host
         data["start_time"] = startTime
         data["location"] = location
+        data["latitude"] = latitude
+        data["longitude"] = longitude
         data["is_public"] = isPublic
 
         return data
