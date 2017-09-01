@@ -11,7 +11,8 @@ public protocol EventMySQLDataAccessorProtocol {
     func getRSVPsForUser(pageSize: Int, pageNumber: Int) throws -> [RSVP]?
     func createEvent(_ event: Event) throws -> Bool
     func createEventRSVPs(withEvent event: Event) throws -> Bool
-    func updateEvent(_ event: Event) throws -> Bool    
+    func updateEvent(_ event: Event) throws -> Bool
+    func updateEventRSVP(_ event: Event, rsvp: RSVP, rsvpID: String) throws -> Bool
     func deleteEvent(withID id: String) throws -> Bool
 }
 
@@ -317,6 +318,15 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
+    public func updateEventRSVP(_ event: Event, rsvp: RSVP, rsvpID: String) throws -> Bool {
+        let updateRSVPQuery = MySQLQueryBuilder()
+            .update(data: rsvp.toMySQLRow(), table: "rsvps")
+            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", rsvpID)
+
+        let result = try execute(builder: updateRSVPQuery)
+        return result.affectedRows > 0
+    }
+
     // MARK: DELETE
 
     public func deleteEvent(withID id: String) throws -> Bool {
@@ -357,10 +367,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             }
 
             result = try connection.execute(builder: deleteRSVPQuery)
-            if result.affectedRows < 1 {
-                return rollbackEventTransaction(withConnection: connection, message: "failed to delete rsvps")
-            }
-
+            
             try connection.commitTransaction()
 
         } catch {

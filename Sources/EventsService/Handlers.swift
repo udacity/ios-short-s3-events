@@ -121,14 +121,14 @@ public class Handlers {
         guard distanceInMiles > 0 else {
             Log.error("distance must be greater than 0")
             try response.send(json: JSON(["message": "distance must be greater than 0"]))
-                        .status(.internalServerError).end()
+                        .status(.badRequest).end()
             return
         }
 
         guard latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180 else {
             Log.error("latitude must be [-90,90], longitude must be [-180,180]")
             try response.send(json: JSON(["message": "latitude must be [-90,90], longitude must be [-180,180]"]))
-                        .status(.internalServerError).end()
+                        .status(.badRequest).end()
             return
         }
 
@@ -268,18 +268,9 @@ public class Handlers {
             RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
-        let postEvent = Event(
-            id: Int(id),
-            name: nil,
-            emoji: nil,
-            description: nil,
-            host: nil,
-            startTime: nil,
-            location: nil,
-            latitude: nil, longitude: nil,
-            isPublic: nil,
-            activities: nil, rsvps: rsvps,
-            createdAt: nil, updatedAt: nil)
+        var postEvent = Event()
+        postEvent.id = Int(id)
+        postEvent.rsvps = rsvps
 
         let missingParameters = postEvent.validateParameters(["id", "rsvps"])
 
@@ -360,7 +351,55 @@ public class Handlers {
     }
 
     public func putRSVPForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Implement.
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let rsvpID = request.parameters["rsvp_id"] else {
+            Log.error("rsvp_id (path parameter) missing")
+            try response.send(json: JSON(["message": "rsvp_id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        // FIXME: Use the userID specified in JWT
+        guard let userID = json["user_id"].string, let accepted = json["accepted"].int,
+            let comment = json["comment"].string else {
+                Log.error("could not initialize user_id, accepted, and comment")
+                try response.send(json: JSON(["message": "could not initialize user_id, accepted, and comment"]))
+                            .status(.badRequest).end()
+                return
+        }
+
+        var event = Event()
+        event.id = Int(id)
+
+        let rsvp = RSVP(
+            userID: userID,
+            eventID: event.id!,
+            accepted: accepted,
+            comment: comment
+        )
+
+        let success = try dataAccessor.updateEventRSVP(event, rsvp: rsvp, rsvpID: rsvpID)
+
+        if success {
+            try response.send(json: JSON(["message": "rsvp updated"])).status(.OK).end()
+            return
+        }
+
+        try response.status(.notModified).end()
     }
 
     // MARK: DELETE
