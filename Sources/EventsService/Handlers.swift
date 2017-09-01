@@ -317,22 +317,29 @@ public class Handlers {
             return
         }
 
+        let activities = json["activities"].arrayValue.map({$0.intValue})
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let startTimeString = json["start_time"].stringValue
+        let startTime: Date? = startTimeString != "" ? dateFormatter.date(from: startTimeString) : nil
+
         let updateEvent = Event(
             id: Int(id),
             name: json["name"].string,
             emoji: json["emoji"].string,
             description: json["description"].string,
             host: json["host"].string,
-            startTime: nil,
+            startTime: startTime,
             location: json["location"].string,
             latitude: json["latitude"].double, longitude: json["longitude"].double,
             isPublic: json["is_public"].int,
-            activities: nil, rsvps: nil,
+            activities: activities, rsvps: nil,
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateEvent.validateParameters(
             ["name", "emoji", "description", "host", "startTime", "location",
-                "latitude", "longitude", "isPublic"])
+                "latitude", "longitude", "isPublic", "activities"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -341,7 +348,13 @@ public class Handlers {
             return
         }
 
-        Log.info("perform put")
+        let success = try dataAccessor.updateEvent(updateEvent)
+
+        if success {
+            try response.send(json: JSON(["message": "event updated"])).status(.OK).end()
+        }
+
+        try response.status(.notModified).end()
     }
 
     public func putRSVPForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {

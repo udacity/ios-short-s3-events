@@ -155,16 +155,19 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         connection.startTransaction()
 
         do {
+            // insert event
             result = try connection.execute(builder: insertEventQuery)
             if result.affectedRows < 1 {
                 return rollbackEventTransaction(withConnection: connection, message: "failed to insert event")
             }
 
+            // get last inserted id
             result = try connection.execute(builder: selectLastEventID)
             guard let row = result.nextResult(), let lastEventID = row["LAST_INSERT_ID()"] as? Int else {
                 return rollbackEventTransaction(withConnection: connection, message: "could not get last inserted event id")
             }
 
+            // insert event_games
             if let activities = event.activities {
                 for activityID in activities {
                     let insertEventGameQuery = MySQLQueryBuilder()
@@ -176,6 +179,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
                 }
             }
 
+            // insert rsvps
             if let rsvps = event.rsvps {
                 for rsvp in rsvps {
                     let insertRSVPQuery = MySQLQueryBuilder()
@@ -222,11 +226,13 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         connection.startTransaction()
 
         do {
+            // ensure event exists
             result = try connection.execute(builder: selectEventID)
             guard let row = result.nextResult(), let eventID = row["id"] as? Int else {
                 return rollbackEventTransaction(withConnection: connection, message: "event with id \(event.id!) does not exist")
             }
 
+            // insert rsvps for event
             if let rsvps = event.rsvps {
                 for rsvp in rsvps {
                     let insertRSVPQuery = MySQLQueryBuilder()
@@ -254,7 +260,61 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     // MARK: UPDATE
 
     public func updateEvent(_ event: Event) throws -> Bool {
-        return false
+        let eventID = "\(event.id!)"
+        let updateEventQuery = MySQLQueryBuilder()
+            .update(data: event.toMySQLRow(), table: "events")
+            .wheres(statement: "id=?", parameters: eventID)
+        let deleteEventGamesQuery = MySQLQueryBuilder()
+            .delete(fromTable: "event_games")
+            .wheres(statement: "event_id=?", parameters: eventID)
+        var result: MySQLResultProtocol
+
+        guard let connection = try pool.getConnection() else {
+            Log.error("could not get a connection")
+            return false
+        }
+        defer { pool.releaseConnection(connection) }
+
+        func rollbackEventTransaction(withConnection: MySQLConnectionProtocol, message: String) -> Bool {
+            Log.error("could not update event: \(message)")
+            try! connection.rollbackTransaction()
+            return false
+        }
+
+        connection.startTransaction()
+
+        do {
+            // update event
+            result = try connection.execute(builder: updateEventQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to update event")
+            }
+
+            // delete event_games, so they can be replaced
+            result = try connection.execute(builder: deleteEventGamesQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "failed to delete existing event games during update")
+            }
+
+            // insert event_games
+            if let activities = event.activities {
+                for activityID in activities {
+                    let insertEventGameQuery = MySQLQueryBuilder()
+                        .insert(data: ["activity_id": activityID, "event_id": eventID], table: "event_games")
+                    result = try connection.execute(builder: insertEventGameQuery)
+                    if result.affectedRows < 1 {
+                        return rollbackEventTransaction(withConnection: connection, message: "failed to insert \(activityID) into event_games")
+                    }
+                }
+            }
+
+            try connection.commitTransaction()
+
+        } catch {
+            return rollbackEventTransaction(withConnection: connection, message: "updateEvent failed")
+        }
+
+        return true
     }
 
     // MARK: DELETE
