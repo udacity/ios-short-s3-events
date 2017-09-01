@@ -75,7 +75,29 @@ public class Handlers {
     }
 
     public func getEventsOnSchedule(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Implement.
+
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
+            Log.error("could not initialize page_size and page_number")
+            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        guard let filterType = request.queryParameters["type"], let type = EventScheduleType(rawValue: filterType) else {
+            Log.error("could not initialize type")
+            try response.send(json: JSON(["message": "could not initialize type"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        let events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: type)
+
+        if events == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
     public func getEventsBySearch(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
