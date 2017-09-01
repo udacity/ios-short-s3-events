@@ -12,7 +12,7 @@ public protocol EventMySQLDataAccessorProtocol {
     func createEvent(_ event: Event) throws -> Bool
     func createEventRSVPs(withEvent event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
-    func updateEventRSVP(_ event: Event, rsvp: RSVP, rsvpID: String) throws -> Bool
+    func updateEventRSVP(_ event: Event, rsvp: RSVP) throws -> Bool
     func deleteEvent(withID id: String) throws -> Bool
 }
 
@@ -62,7 +62,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             let selectEventGames = MySQLQueryBuilder()
                 .select(fields: ["activity_id", "event_id"], table: "event_games")
             let selectRSVPs = MySQLQueryBuilder()
-                .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
+                .select(fields: ["id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
             let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: ids)
                 .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
                 .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
@@ -81,7 +81,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let selectEventGames = MySQLQueryBuilder()
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
+            .select(fields: ["id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
 
         let selectQuery = selectEvents.wheres(statement:"id IN (?)", parameters: ids)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
@@ -110,7 +110,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     public func getRSVPs(forEventID: String, pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["user_id", "accepted", "comment"], table: "rsvps")
+            .select(fields: ["id", "user_id", "accepted", "comment"], table: "rsvps")
             .wheres(statement: "event_id=?", parameters: forEventID)
 
         let result = try execute(builder: selectRSVPs)
@@ -123,7 +123,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func getRSVPsForUser(pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
         // FIXME: use wheres to select RSVPs for user specified in JWT
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["user_id", "accepted", "comment"], table: "rsvps")
+            .select(fields: ["id", "user_id", "accepted", "comment"], table: "rsvps")
 
         let result = try execute(builder: selectRSVPs)
         result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
@@ -318,10 +318,10 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
-    public func updateEventRSVP(_ event: Event, rsvp: RSVP, rsvpID: String) throws -> Bool {
+    public func updateEventRSVP(_ event: Event, rsvp: RSVP) throws -> Bool {
         let updateRSVPQuery = MySQLQueryBuilder()
             .update(data: rsvp.toMySQLRow(), table: "rsvps")
-            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", rsvpID)
+            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", "\(rsvp.id!)")
 
         let result = try execute(builder: updateRSVPQuery)
         return result.affectedRows > 0
@@ -367,7 +367,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             }
 
             result = try connection.execute(builder: deleteRSVPQuery)
-            
+
             try connection.commitTransaction()
 
         } catch {

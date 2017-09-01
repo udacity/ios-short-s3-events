@@ -206,7 +206,7 @@ public class Handlers {
 
         let activities = json["activities"].arrayValue.map({$0.intValue})
         let rsvps = json["rsvps"].arrayValue.map({
-            RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
+            RSVP(id: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
         let dateFormatter = DateFormatter()
@@ -265,7 +265,7 @@ public class Handlers {
         }
 
         let rsvps = json["rsvps"].arrayValue.map({
-            RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
+            RSVP(id: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
         var postEvent = Event()
@@ -386,13 +386,14 @@ public class Handlers {
         event.id = Int(id)
 
         let rsvp = RSVP(
+            id: Int(rsvpID),
             userID: userID,
             eventID: event.id!,
             accepted: accepted,
             comment: comment
         )
 
-        let success = try dataAccessor.updateEventRSVP(event, rsvp: rsvp, rsvpID: rsvpID)
+        let success = try dataAccessor.updateEventRSVP(event, rsvp: rsvp)
 
         if success {
             try response.send(json: JSON(["message": "rsvp updated"])).status(.OK).end()

@@ -4,6 +4,7 @@ import SwiftyJSON
 // MARK: - RSVP
 
 public struct RSVP {
+    public var id: Int?
     public var userID: String?
     public var eventID: Int?
     public var accepted: Int?
@@ -17,6 +18,7 @@ extension RSVP: JSONAble {
         var dict = [String: Any]()
         let nilValue: Any? = nil
 
+        dict["id"] = id != nil ? id : nilValue
         dict["user_id"] = userID != nil ? userID : nilValue
         dict["accepted"] = accepted != nil ? accepted : nilValue
         dict["comment"] = comment != nil ? comment : nilValue

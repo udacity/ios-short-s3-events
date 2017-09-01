@@ -14,6 +14,7 @@ public extension MySQLResultProtocol {
 
             var rsvp = RSVP()
 
+            rsvp.id = row["id"] as? Int
             rsvp.userID = row["user_id"] as? String
             rsvp.comment = row["comment"] as? String
             rsvp.accepted = row["accepted"] as? Int
