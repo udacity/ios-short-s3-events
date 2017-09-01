@@ -229,7 +229,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         do {
             // ensure event exists
             result = try connection.execute(builder: selectEventID)
-            guard let row = result.nextResult(), let eventID = row["id"] as? Int else {
+            guard let row = result.nextResult(), let _ = row["id"] as? Int else {
                 return rollbackEventTransaction(withConnection: connection, message: "event with id \(event.id!) does not exist")
             }
 
@@ -237,12 +237,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             if let rsvps = event.rsvps {
                 for rsvp in rsvps {
                     let insertRSVPQuery = MySQLQueryBuilder()
-                        .insert(data: [
-                            "user_id": rsvp.userID!,
-                            "event_id": eventID,
-                            "accepted": -1,
-                            "comment": ""
-                        ], table: "rsvps")
+                        .insert(data: rsvp.toMySQLRow(), table: "rsvps")
                     result = try connection.execute(builder: insertRSVPQuery)
                     if result.affectedRows < 1 {
                         return rollbackEventTransaction(withConnection: connection, message: "failed to insert \(rsvp) into rsvps")

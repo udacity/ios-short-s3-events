@@ -264,9 +264,26 @@ public class Handlers {
             return
         }
 
-        let rsvps = json["rsvps"].arrayValue.map({
-            RSVP(id: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
-        })
+        guard let rsvpJSONArray = json["rsvps"].array else {
+            Log.error("json body is missing rsvps")
+            try response.send(json: JSON(["message": "json body is missing rsvps"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        var rsvps: [RSVP] = []
+        for rsvpJSON in rsvpJSONArray {
+            let rsvp = RSVP(
+                id: nil,
+                userID: rsvpJSON["user_id"].string,
+                eventID: Int(id),
+                accepted: rsvpJSON["accepted"].int,
+                comment: rsvpJSON["comment"].string
+            )
+            rsvps.append(rsvp)
+        }
+
+        Log.info("\(rsvps)")
 
         var postEvent = Event()
         postEvent.id = Int(id)
