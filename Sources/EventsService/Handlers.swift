@@ -204,7 +204,26 @@ public class Handlers {
             return
         }
 
-        let activities = json["activities"].arrayValue.map({$0.intValue})
+        guard let activitiesJSON = json["activities"].array else {
+            Log.error("could not initialize event's activites")
+            try response.send(json: JSON(["message": "could not initialize event's activites"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        var activities: [Int] = []
+        for activityJSON in activitiesJSON {
+            if let activity = activityJSON.int {
+                activities.append(activity)
+            }
+        }        
+        guard activities.count > 0 else {
+            Log.error("event must have atleast one activity")
+            try response.send(json: JSON(["message": "event must have atleast one activity"]))
+                        .status(.badRequest).end()
+            return
+        }
+
         let rsvps = json["rsvps"].arrayValue.map({
             RSVP(id: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
