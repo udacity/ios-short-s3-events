@@ -55,7 +55,7 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         return deleteEventReturn
     }
 
-    func getEvents(withID id: String, pageSize: Int, pageNumber: Int) throws -> [Event]? {
+    func getEvents(withIDs ids: [String], pageSize: Int, pageNumber: Int) throws -> [Event]? {
         getEventCalled = true
 
         if let err = getEventError {
@@ -65,7 +65,7 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         return getEventReturn
     }
 
-    func getEvents(pageSize: Int = 10, pageNumber: Int = 1, type: EventScheduleType = .all) throws -> [Event]? {
+    func getEvents(pageSize: Int, pageNumber: Int, type: EventScheduleType) throws -> [Event]? {
         getEventCalled = true
 
         if let err = getEventError {
@@ -73,6 +73,10 @@ class MockEventDataAccessor: EventMySQLDataAccessorProtocol {
         }
 
         return getEventReturn
+    }
+
+    func getEventIDsNearLocation(latitude: Double, longitude: Double, miles: Int, pageSize: Int, pageNumber: Int) throws -> [String]? {
+        return nil
     }
 
     func postEventRSVPs(withEvent event: Event) throws -> Bool {

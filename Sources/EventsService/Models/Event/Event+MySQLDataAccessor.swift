@@ -5,7 +5,8 @@ import LoggerAPI
 
 public protocol EventMySQLDataAccessorProtocol {
     func getEvents(pageSize: Int, pageNumber: Int, type: EventScheduleType) throws -> [Event]?
-    func getEvents(withID id: String, pageSize: Int, pageNumber: Int) throws -> [Event]?
+    func getEvents(withIDs ids: [String], pageSize: Int, pageNumber: Int) throws -> [Event]?
+    func getEventIDsNearLocation(latitude: Double, longitude: Double, miles: Int, pageSize: Int, pageNumber: Int) throws -> [String]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
     func postEventRSVPs(withEvent event: Event) throws -> Bool
@@ -37,7 +38,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         switch type {
         case .upcoming:
             selectEventIDs = selectEventIDs.wheres(statement: "start_time >= CURDATE()", parameters: [])
-        case .past:            
+        case .past:
             selectEventIDs = selectEventIDs.wheres(statement: "start_time < CURDATE()", parameters: [])
         default:
             break
@@ -71,7 +72,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return (events.count == 0) ? nil : events
     }
 
-    public func getEvents(withID id: String, pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+    public func getEvents(withIDs ids: [String], pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
         let selectEvents = MySQLQueryBuilder()
             .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
                 "location", "latitude", "longitude", "is_public"], table: "events")
@@ -80,13 +81,29 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let selectRSVPs = MySQLQueryBuilder()
             .select(fields: ["user_id", "event_id", "accepted", "comment"], table: "rsvps")
 
-        let selectQuery = selectEvents.wheres(statement:"id=?", parameters: id)
+        let selectQuery = selectEvents.wheres(statement:"id IN (?)", parameters: ids)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 
         let result = try execute(builder: selectQuery)
-        let events = result.toEvents()
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let events = result.toEvents(pageSize: pageSize)
         return (events.count == 0) ? nil : events
+    }
+
+    public func getEventIDsNearLocation(latitude: Double, longitude: Double, miles: Int, pageSize: Int = 10, pageNumber: Int = 1) throws -> [String]? {
+        let connection = try pool.getConnection()
+        defer { pool.releaseConnection(connection!) }
+
+        let procedureCall = "CALL events_within_miles_from_location(\(latitude), \(longitude), \(miles))"
+        
+        let result = try connection!.execute(query: procedureCall)
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let events = result.toEvents(pageSize: pageSize)
+        let ids = events.map({String($0.id!)})
+        return (ids.count == 0) ? nil : ids
     }
 
     public func createEvent(_ event: Event) throws -> Bool {

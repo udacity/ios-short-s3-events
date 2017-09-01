@@ -42,7 +42,7 @@ public class Handlers {
         var events: [Event]?
 
         if let id = id {
-            events = try dataAccessor.getEvents(withID: id, pageSize: pageSize, pageNumber: pageNumber)
+            events = try dataAccessor.getEvents(withIDs: [id], pageSize: pageSize, pageNumber: pageNumber)
         } else {
             events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
         }
@@ -56,7 +56,7 @@ public class Handlers {
     }
 
     public func searchEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        
+
         guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
             Log.error("could not initialize page_size and page_number")
             try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
@@ -66,9 +66,28 @@ public class Handlers {
 
         var events: [Event]?
 
-        if let body = request.body, case let .json(json) = body, let filterType = json["type"].string {
-            let type = EventScheduleType(rawValue: filterType) ?? .all
-            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: type)
+        if let body = request.body, case let .json(json) = body {
+
+            if let filterType = json["type"].string, let type = EventScheduleType(rawValue: filterType) {
+                events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: type)
+            }
+
+            if let location = json["location"].dictionary, let distanceInMiles = location["distance"]?.int,
+                let fromLatitude = location["from_latitude"]?.double,
+                let fromLongitude = location["from_longitude"]?.double {
+
+                let ids = try dataAccessor.getEventIDsNearLocation(
+                    latitude: fromLatitude,
+                    longitude: fromLongitude,
+                    miles: distanceInMiles,
+                    pageSize: pageSize,
+                    pageNumber: pageNumber
+                )
+
+                if let ids = ids {
+                    events = try dataAccessor.getEvents(withIDs: ids, pageSize: pageSize, pageNumber: 1)
+                }
+            }
         } else {
             events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
         }
