@@ -10,8 +10,8 @@ public protocol EventMySQLDataAccessorProtocol {
     func getRSVPs(forEventID: String, pageSize: Int, pageNumber: Int) throws -> [RSVP]?
     func getRSVPsForUser(pageSize: Int, pageNumber: Int) throws -> [RSVP]?
     func createEvent(_ event: Event) throws -> Bool
-    func updateEvent(_ event: Event) throws -> Bool
-    func postEventRSVPs(withEvent event: Event) throws -> Bool
+    func createEventRSVPs(withEvent event: Event) throws -> Bool
+    func updateEvent(_ event: Event) throws -> Bool    
     func deleteEvent(withID id: String) throws -> Bool
 }
 
@@ -205,7 +205,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
-    public func postEventRSVPs(withEvent event: Event) throws -> Bool {
+    public func createEventRSVPs(withEvent event: Event) throws -> Bool {
         let selectEventID = MySQLQueryBuilder()
             .select(fields: ["id"], table: "events")
             .wheres(statement: "Id=?", parameters: "\(event.id!)")

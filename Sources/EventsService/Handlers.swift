@@ -290,10 +290,11 @@ public class Handlers {
             return
         }
 
-        let success = try dataAccessor.postEventRSVPs(withEvent: postEvent)
+        let success = try dataAccessor.createEventRSVPs(withEvent: postEvent)
 
         if success {
             try response.send(json: JSON(["message": "rsvps sent"])).status(.OK).end()
+            return
         }
 
         try response.status(.notModified).end()
@@ -352,6 +353,7 @@ public class Handlers {
 
         if success {
             try response.send(json: JSON(["message": "event updated"])).status(.OK).end()
+            return
         }
 
         try response.status(.notModified).end()
@@ -376,6 +378,7 @@ public class Handlers {
 
         if success {
             try response.send(json: JSON(["message": "resource deleted"])).status(.noContent).end()
+            return
         }
 
         try response.status(.notModified).end()
