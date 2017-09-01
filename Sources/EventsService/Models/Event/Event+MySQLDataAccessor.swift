@@ -120,7 +120,15 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     }
 
     public func getRSVPsForUser(pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
-        return nil
+        // FIXME: use wheres to select RSVPs for user specified in JWT
+        let selectRSVPs = MySQLQueryBuilder()
+            .select(fields: ["user_id", "accepted", "comment"], table: "rsvps")
+
+        let result = try execute(builder: selectRSVPs)
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let rsvps = result.toRSVPs(pageSize: pageSize)
+        return (rsvps.count == 0) ? nil : rsvps
     }
 
     // MARK: CREATE

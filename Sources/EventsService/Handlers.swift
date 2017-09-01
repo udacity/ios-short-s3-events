@@ -175,7 +175,22 @@ public class Handlers {
     }
 
     public func getRSVPsForUser(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Implement.
+
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
+            Log.error("could not initialize page_size and page_number")
+            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        let rsvps = try dataAccessor.getRSVPsForUser(pageSize: pageSize, pageNumber: pageNumber)
+
+        if rsvps == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: rsvps!.toJSON()).status(.OK).end()
     }
 
     // MARK: POST
