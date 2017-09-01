@@ -28,10 +28,27 @@ paths:
          in: query
          description: Number of events returned. Limit is 50.
          type: integer
+         default: 10
        - name: page_number
          in: query
          description: Page number.
-         type: integer  
+         type: integer
+         default: 1
+       - name: filter
+         in: body
+         description: Properties for filtering search.
+         required: true
+         schema:
+           type: object
+           properties:
+            id:
+              type: array
+              description: IDs of events to filter.
+              items:
+                type: string
+                default: "3"   
+           required:
+            - id
       responses:
         200:
           description: Successful response.
@@ -42,7 +59,8 @@ paths:
         401:
           $ref: "#/responses/Unauthorized"
       security:
-        - JWT: []           
+        - Public: []
+        - JWT: []
     post:
       description: Create a new event.
       summary: Create a new event.
@@ -70,34 +88,36 @@ paths:
         - JWT: []           
   /events/search:
     get:
-      description: List and filter events.
-      summary: List and filter events.
+      description: List events based on a distance from a location.
+      summary: List events based on a distance from a location.
       parameters:
        - name: page_size
          in: query
          description: Number of events returned. Limit is 50.
          type: integer
+         default: 10
        - name: page_number
          in: query
          description: Page number.
          type: integer
-       - name: filter
-         in: body
-         description: Properties for filtering search.
-         schema:
-           type: object
-           properties:
-            type:
-              type: string
-              description: Type of events to filter (upcoming|past).
-              default: "upcoming"
-            location:
-              type: object
-              description: Maximum distance to events to filter.
-              $ref: '#/definitions/Location'
-           required:
-              - type
-              - location
+         default: 1
+       - name: distance
+         in: query
+         description: Distance in miles.
+         type: integer
+         default: 25
+       - name: latitude
+         in: query
+         type: number
+         format: double
+         description: Signed latitude without compass direction [-90, 90]. Negative indicates south, positive indicates north.   
+         default: 37.7749
+       - name: longitude
+         in: query
+         type: number
+         format: double
+         description: Signed longitude without compass direction [-180, 180]. Negative indicates west, positive indicates east.
+         default: -122.4194     
       responses:
         200:
           description: Successful response.
@@ -108,7 +128,39 @@ paths:
         401:
           $ref: "#/responses/Unauthorized" 
       security:
-        - JWT: []           
+        - Public: []
+        - JWT: [] 
+  /events/schedule:
+    get:
+      description: List and filter the current user's events.
+      summary: List and filter the current user's events.
+      parameters:
+       - name: page_size
+         in: query
+         description: Number of events returned. Limit is 50.
+         type: integer
+         default: 10
+       - name: page_number
+         in: query
+         description: Page number.
+         type: integer
+         default: 1
+       - name: type
+         in: query
+         type: string
+         description: Type of events to filter (upcoming|past).
+         default: "upcoming"
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/GetEvent'
+        401:
+          $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []        
   /events/{id}:
     get:
       description: Get information about an event.
@@ -130,6 +182,7 @@ paths:
         404:
           $ref: "#/responses/NotFound"
       security:
+        - Public: []
         - JWT: []           
     put:
       description: Update an event.
@@ -186,7 +239,33 @@ paths:
         401:
           $ref: "#/responses/Unauthorized"
       security:
-        - JWT: []           
+        - JWT: []    
+  /events/rsvps:
+    get:
+      description: List the current user's RSVPs.
+      summary: List the current user's RSVPs.
+      parameters:
+        - name: page_size
+          in: query
+          description: Number of events returned. Limit is 50.
+          type: integer
+          default: 10
+        - name: page_number
+          in: query
+          description: Page number.
+          type: integer
+          default: 1
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/RSVP'
+        401:
+          $ref: "#/responses/Unauthorized" 
+      security:
+        - JWT: []          
   /events/{id}/rsvps:
     get:
       description: List RSVPs for an event.
@@ -242,8 +321,8 @@ paths:
         - JWT: []           
   /events/{id}/rsvps/{rsvp_id}:
     put:
-      description: Update a RSVP for an event.
-      summary: Update a RSVP for an event.
+      description: Update an RSVP for an event.
+      summary: Update an RSVP for an event.
       parameters:
         - name: id
           in: path
@@ -292,6 +371,9 @@ responses:
     description: Unauthorized.
 
 securityDefinitions:
+  Public:
+    type: basic
+    description: A public endpoint. Only public data is returned. No username or password is required.
   JWT:
     type: apiKey
     description: A Base64-encoded JSON web token.
@@ -462,29 +544,6 @@ definitions:
       - user_id
       - accepted
       - comment
-  Location:
-    type: object
-    properties:
-      distance:
-        type: number
-        format: double
-        description: Distance in miles.
-      from_latitude:
-        type: number
-        format: double
-        description: Signed latitude without compass direction [-90, 90]. Negative indicates south, positive indicates north.
-      from_longitude:
-        type: number
-        format: double
-        description: Signed longitude without compass direction [-180, 180]. Negative indicates west, positive indicates east.
-    required:
-      - distance  
-      - from_latitude
-      - from_longitude
-    default:
-      distance: 10.0
-      from_longitude: 0.0
-      from_latitude: 0.0
   RSVPResponse:
     type: object
     properties:
