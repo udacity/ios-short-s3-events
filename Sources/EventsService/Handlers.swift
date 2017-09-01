@@ -109,32 +109,35 @@ public class Handlers {
             return
         }
 
+        guard let distanceInMilesString = request.queryParameters["distance"], let latitudeString = request.queryParameters["latitude"],
+            let longitudeString = request.queryParameters["longitude"], let distanceInMiles = Int(distanceInMilesString),
+            let latitude = Double(latitudeString), let longitude = Double(longitudeString) else {
+                Log.error("could not initialize distance, latitude, and longitude")
+                try response.send(json: JSON(["message": "could not initialize distance, latitude, and longitude"]))
+                            .status(.internalServerError).end()
+                return
+        }
+
+        guard distanceInMiles > 0 else {
+            Log.error("distance must be greater than 0")
+            try response.send(json: JSON(["message": "distance must be greater than 0"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        guard latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180 else {
+            Log.error("latitude must be [-90,90], longitude must be [-180,180]")
+            try response.send(json: JSON(["message": "latitude must be [-90,90], longitude must be [-180,180]"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        let ids = try dataAccessor.getEventIDsNearLocation(latitude: latitude, longitude: longitude,
+            miles: distanceInMiles, pageSize: pageSize, pageNumber: pageNumber)
         var events: [Event]?
 
-        if let body = request.body, case let .json(json) = body {
-
-            if let filterType = json["type"].string, let type = EventScheduleType(rawValue: filterType) {
-                events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: type)
-            }
-
-            if let location = json["location"].dictionary, let distanceInMiles = location["distance"]?.int,
-                let fromLatitude = location["from_latitude"]?.double,
-                let fromLongitude = location["from_longitude"]?.double {
-
-                let ids = try dataAccessor.getEventIDsNearLocation(
-                    latitude: fromLatitude,
-                    longitude: fromLongitude,
-                    miles: distanceInMiles,
-                    pageSize: pageSize,
-                    pageNumber: pageNumber
-                )
-
-                if let ids = ids {
-                    events = try dataAccessor.getEvents(withIDs: ids, pageSize: pageSize, pageNumber: 1)
-                }
-            }
-        } else {
-            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
+        if let ids = ids {
+            events = try dataAccessor.getEvents(withIDs: ids, pageSize: pageSize, pageNumber: 1)
         }
 
         if events == nil {
