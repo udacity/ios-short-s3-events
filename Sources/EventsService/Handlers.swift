@@ -28,9 +28,26 @@ public class Handlers {
 
     // MARK: GET
 
-    public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getSingleEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        let id = request.parameters["id"]
+        guard let id = request.parameters["id"] else {
+            Log.error("id (path parameter) missing")
+            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let events = try dataAccessor.getEvents(withIDs: [id], pageSize: 1, pageNumber: 1)
+
+        if events == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: events!.toJSON()).status(.OK).end()
+    }
+
+    public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
             Log.error("could not initialize page_size and page_number")
@@ -39,13 +56,15 @@ public class Handlers {
             return
         }
 
-        var events: [Event]?
-
-        if let id = id {
-            events = try dataAccessor.getEvents(withIDs: [id], pageSize: pageSize, pageNumber: pageNumber)
-        } else {
-            events = try dataAccessor.getEvents(pageSize: pageSize, pageNumber: pageNumber, type: .all)
+        guard let body = request.body, case let .json(json) = body, let idFilter = json["id"].array else {
+            Log.error("json body is invalid; ensure id filter is present")
+            try response.send(json: JSON(["message": "json body is invalid; ensure id filter is present"]))
+                        .status(.internalServerError).end()
+            return
         }
+
+        let ids = idFilter.map({$0.stringValue})
+        let events = try dataAccessor.getEvents(withIDs: ids, pageSize: pageSize, pageNumber: pageNumber)
 
         if events == nil {
             try response.status(.notFound).end()

@@ -43,7 +43,7 @@ router.get("/events/:id/rsvps", handler: handlers.getRSVPsForEvent)
 router.get("/events/rsvps", handler: handlers.getRSVPsForUser)
 router.get("/events/search", handler: handlers.getEventsBySearch)
 router.get("/events/schedule", handler: handlers.getEventsOnSchedule)
-router.get("/events/:id", handler: handlers.getEvents)
+router.get("/events/:id", handler: handlers.getSingleEvent)
 router.get("/events", handler: handlers.getEvents)
 
 // POST
