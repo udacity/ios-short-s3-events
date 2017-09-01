@@ -7,10 +7,11 @@ public protocol EventMySQLDataAccessorProtocol {
     func getEvents(pageSize: Int, pageNumber: Int, type: EventScheduleType) throws -> [Event]?
     func getEvents(withIDs ids: [String], pageSize: Int, pageNumber: Int) throws -> [Event]?
     func getEventIDsNearLocation(latitude: Double, longitude: Double, miles: Int, pageSize: Int, pageNumber: Int) throws -> [String]?
+    func getRSVPs(forEventID: String, pageSize: Int, pageNumber: Int) throws -> [RSVP]?
+    func getRSVPsForUser(pageSize: Int, pageNumber: Int) throws -> [RSVP]?
     func createEvent(_ event: Event) throws -> Bool
     func updateEvent(_ event: Event) throws -> Bool
     func postEventRSVPs(withEvent event: Event) throws -> Bool
-    func patchEventRSVPs(withEvent event: Event) throws -> Bool
     func deleteEvent(withID id: String) throws -> Bool
 }
 
@@ -28,7 +29,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         self.pool = pool
     }
 
-    // MARK: Queries
+    // MARK: READ
 
     public func getEvents(pageSize: Int = 10, pageNumber: Int = 1, type: EventScheduleType = .all) throws -> [Event]? {
         // select event ids and apply pagination before doing joins
@@ -106,6 +107,24 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return (ids.count == 0) ? nil : ids
     }
 
+    public func getRSVPs(forEventID: String, pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
+        let selectRSVPs = MySQLQueryBuilder()
+            .select(fields: ["user_id", "accepted", "comment"], table: "rsvps")
+            .wheres(statement: "event_id=?", parameters: forEventID)
+
+        let result = try execute(builder: selectRSVPs)
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let rsvps = result.toRSVPs(pageSize: pageSize)
+        return (rsvps.count == 0) ? nil : rsvps
+    }
+
+    public func getRSVPsForUser(pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
+        return nil
+    }
+
+    // MARK: CREATE
+
     public func createEvent(_ event: Event) throws -> Bool {
         let insertEventQuery = MySQLQueryBuilder()
             .insert(data: event.toMySQLRow(), table: "events")
@@ -174,10 +193,6 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
-    public func updateEvent(_ event: Event) throws -> Bool {
-        return false
-    }
-
     public func postEventRSVPs(withEvent event: Event) throws -> Bool {
         let selectEventID = MySQLQueryBuilder()
             .select(fields: ["id"], table: "events")
@@ -228,9 +243,13 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         return true
     }
 
-    public func patchEventRSVPs(withEvent event: Event) throws -> Bool {
+    // MARK: UPDATE
+
+    public func updateEvent(_ event: Event) throws -> Bool {
         return false
     }
+
+    // MARK: DELETE
 
     public func deleteEvent(withID id: String) throws -> Bool {
         let deleteEventQuery = MySQLQueryBuilder()
