@@ -97,7 +97,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         defer { pool.releaseConnection(connection!) }
 
         let procedureCall = "CALL events_within_miles_from_location(\(latitude), \(longitude), \(miles))"
-        
+
         let result = try connection!.execute(query: procedureCall)
         result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
 

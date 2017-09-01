@@ -67,11 +67,15 @@ extension Event {
         data["emoji"] = emoji
         data["description"] = description
         data["host"] = host
-        data["start_time"] = startTime
         data["location"] = location
         data["latitude"] = latitude
         data["longitude"] = longitude
         data["is_public"] = isPublic
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+
+        data["start_time"] = startTime != nil ? dateFormatter.string(from: startTime!) : nil        
 
         return data
     }

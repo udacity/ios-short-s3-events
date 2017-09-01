@@ -116,13 +116,18 @@ public class Handlers {
             RSVP(userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let startTimeString = json["start_time"].stringValue
+        let startTime: Date? = startTimeString != "" ? dateFormatter.date(from: startTimeString) : nil
+
         let newEvent = Event(
             id: nil,
             name: json["name"].string,
             emoji: json["emoji"].string,
             description: json["description"].string,
             host: json["host"].string,
-            startTime: nil,
+            startTime: startTime,
             location: json["location"].string,
             latitude: json["latitude"].double, longitude: json["longitude"].double,
             isPublic: json["is_public"].int,
@@ -130,8 +135,8 @@ public class Handlers {
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = newEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location",
-                "latitude", "longitude", "is_public", "activities", "rsvps"])
+            ["name", "emoji", "description", "host", "startTime", "location",
+                "latitude", "longitude", "isPublic", "activities", "rsvps"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
@@ -233,8 +238,8 @@ public class Handlers {
             createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateEvent.validateParameters(
-            ["name", "emoji", "description", "host", "start_time", "location",
-                "latitude", "longitude", "is_public"])
+            ["name", "emoji", "description", "host", "startTime", "location",
+                "latitude", "longitude", "isPublic"])
 
         if missingParameters.count != 0 {
             Log.error("parameters missing \(missingParameters)")
