@@ -87,12 +87,6 @@ paths:
          schema:
            type: object
            properties:
-            id:
-              type: array
-              description: IDs of events to filter.
-              items:
-                type: string
-                default: "3"
             type:
               type: string
               description: Type of events to filter (upcoming|past).
@@ -102,7 +96,6 @@ paths:
               description: Maximum distance to events to filter.
               $ref: '#/definitions/Location'
            required:
-              - id
               - type
               - location
       responses:
