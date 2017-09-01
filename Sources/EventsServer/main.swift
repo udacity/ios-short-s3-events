@@ -39,21 +39,22 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/events/search", handler: handlers.searchEvents)
+router.get("/events/:id/rsvps", handler: handlers.getRSVPsForEvent)
+router.get("/events/rsvps", handler: handlers.getRSVPsForUser)
+router.get("/events/search", handler: handlers.getEventsBySearch)
+router.get("/events/schedule", handler: handlers.getEventsOnSchedule)
 router.get("/events/:id", handler: handlers.getEvents)
 router.get("/events", handler: handlers.getEvents)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
+router.post("/events/:id/rsvps", handler: handlers.postRSVPsForEvent)
 router.post("/events", handler: handlers.postEvent)
-router.post("/rsvps/:id", handler: handlers.postEventRSVPs)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
+router.put("/events/:id/rsvps/:rsvp_id", handler: handlers.putRSVPForEvent)
 router.put("/events/:id", handler: handlers.putEvent)
-
-// PATCH
-router.patch("/rsvps/:id", handler: handlers.patchEventRSVPs)
 
 // DELETE
 router.delete("/*", middleware: CheckRequestMiddleware(method: .delete))

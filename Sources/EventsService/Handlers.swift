@@ -55,7 +55,11 @@ public class Handlers {
         try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
-    public func searchEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getEventsOnSchedule(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Implement.
+    }
+
+    public func getEventsBySearch(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
             Log.error("could not initialize page_size and page_number")
@@ -98,6 +102,14 @@ public class Handlers {
         }
 
         try response.send(json: events!.toJSON()).status(.OK).end()
+    }
+
+    public func getRSVPsForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Implement.
+    }
+
+    public func getRSVPsForUser(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Implement.
     }
 
     // MARK: POST
@@ -155,7 +167,7 @@ public class Handlers {
         try response.status(.notModified).end()
     }
 
-    public func postEventRSVPs(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func postRSVPsForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let body = request.body, case let .json(json) = body else {
             Log.error("body contains invalid JSON")
@@ -251,9 +263,8 @@ public class Handlers {
         Log.info("perform put")
     }
 
-    // MARK: PATCH
-
-    public func patchEventRSVPs(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func putRSVPForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Implement.
     }
 
     // MARK: DELETE
