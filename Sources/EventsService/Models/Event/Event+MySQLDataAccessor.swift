@@ -384,4 +384,14 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     func cacluateOffset(pageSize: Int, pageNumber: Int) -> Int64 {
         return Int64(pageNumber > 1 ? pageSize * (pageNumber - 1) : 0)
     }
+
+    public func isConnected() -> Bool {
+        do {
+            let connection = try pool.getConnection()
+            defer { pool.releaseConnection(connection!) }
+        } catch {
+            return false
+        }
+        return true
+    }    
 }
