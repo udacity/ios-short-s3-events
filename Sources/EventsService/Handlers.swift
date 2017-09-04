@@ -93,9 +93,9 @@ public class Handlers {
         }
 
         guard let filterType = request.queryParameters["type"], let type = EventScheduleType(rawValue: filterType) else {
-            Log.error("could not initialize type")
-            try response.send(json: JSON(["message": "could not initialize type"]))
-                        .status(.internalServerError).end()
+            Log.error("Cannot initialize query parameter: type. type must be upcoming, past, or all.")
+            try response.send(json: JSON(["message": "Cannot initialize query parameter: type. type must be upcoming, past, or all."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -109,7 +109,7 @@ public class Handlers {
         try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
-    public func getSearchedEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getEventsBySearch(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
             pageSize > 0, pageSize <= 50 else {
@@ -119,34 +119,27 @@ public class Handlers {
             return
         }
 
-        guard let distanceInMilesString = request.queryParameters["distance"], let latitudeString = request.queryParameters["latitude"],
-            let longitudeString = request.queryParameters["longitude"], let distanceInMiles = Int(distanceInMilesString),
-            let latitude = Double(latitudeString), let longitude = Double(longitudeString) else {
-                Log.error("could not initialize distance, latitude, and longitude")
-                try response.send(json: JSON(["message": "could not initialize distance, latitude, and longitude"]))
-                            .status(.internalServerError).end()
+        guard let distanceInMilesString = request.queryParameters["distance"], let distanceInMiles = Int(distanceInMilesString), distanceInMiles > 0 else {
+            Log.error("Cannot initialize query parameters: distance. distance must be an unsigned integer.")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: distance. distance must be an unsigned integer."]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let latitudeString = request.queryParameters["latitude"], let longitudeString = request.queryParameters["longitude"],
+            let latitude = Double(latitudeString), let longitude = Double(longitudeString), latitude >= -90, latitude <= 90, longitude >= -180, longitude <= 180 else {
+                Log.error("Cannot initialize query parameters: latitude, longitude. latitude must be [-90, 90]. longitude must be [-180, 180].")
+                try response.send(json: JSON(["message": "Cannot initialize query parameters: latitude, longitude. latitude must be [-90, 90]. longitude must be [-180, 180]."]))
+                            .status(.badRequest).end()
                 return
         }
 
-        guard distanceInMiles > 0 else {
-            Log.error("distance must be greater than 0")
-            try response.send(json: JSON(["message": "distance must be greater than 0"]))
-                        .status(.badRequest).end()
-            return
-        }
-
-        guard latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180 else {
-            Log.error("latitude must be [-90,90], longitude must be [-180,180]")
-            try response.send(json: JSON(["message": "latitude must be [-90,90], longitude must be [-180,180]"]))
-                        .status(.badRequest).end()
-            return
-        }
-
-        let ids = try dataAccessor.getEventIDsNearLocation(latitude: latitude, longitude: longitude,
-            miles: distanceInMiles, pageSize: pageSize, pageNumber: pageNumber)
         var events: [Event]?
 
-        if let ids = ids {
+        // Use stored MySQL procedure to get ids for events near location, apply pagination
+        if let ids = try dataAccessor.getEventIDsNearLocation(latitude: latitude, longitude: longitude,
+            miles: distanceInMiles, pageSize: pageSize, pageNumber: pageNumber) {
+            // Get data about events
             events = try dataAccessor.getEvents(withIDs: ids, pageSize: pageSize, pageNumber: 1)
         }
 
@@ -195,6 +188,7 @@ public class Handlers {
             return
         }
 
+        // FIXME: Get RSVPs for user specified in JWT
         let rsvps = try dataAccessor.getRSVPsForUser(pageSize: pageSize, pageNumber: pageNumber)
 
         if rsvps == nil {

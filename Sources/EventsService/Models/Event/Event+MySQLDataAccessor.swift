@@ -107,6 +107,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let connection = try pool.getConnection()
         defer { pool.releaseConnection(connection!) }
 
+        // Use stored MySQL procedure to get ids for events near location, apply pagination
         let procedureCall = "CALL events_within_miles_from_location(\(latitude), \(longitude), \(miles))"
 
         let result = try connection!.execute(query: procedureCall)
@@ -114,6 +115,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
         let events = result.toEvents(pageSize: pageSize)
         let ids = events.map({String($0.id!)})
+
         return (ids.count == 0) ? nil : ids
     }
 
