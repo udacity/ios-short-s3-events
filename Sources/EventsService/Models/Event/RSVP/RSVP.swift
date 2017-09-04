@@ -41,3 +41,21 @@ extension RSVP {
         return data
     }
 }
+
+// MARK: - RSVP (Validate)
+
+extension RSVP {
+    public func validateParameters(_ parameters: [String]) -> [String] {
+        var missingParameters = [String]()
+        let mirror = Mirror(reflecting: self)
+
+        for (name, value) in mirror.children {
+            guard let name = name, parameters.contains(name) else { continue }
+            if "\(value)" == "nil" {
+                missingParameters.append("\(name)")
+            }
+        }
+
+        return missingParameters
+    }
+}
