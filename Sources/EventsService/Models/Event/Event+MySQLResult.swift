@@ -8,79 +8,83 @@ public extension MySQLResultProtocol {
 
     public func toEvents(pageSize: Int = 10) -> [Event] {
 
+        // Track unique event records with a dictionary
+        // This eliminates duplicates in the results of JOIN-based queries
         var eventsDictionary = [Int:Event]()
         var usersInvited = [String]()
 
         while case let row? = self.nextResult() {
-            
-            // Scan over rows with event.id
+
             if let id = row["id"] as? Int {
 
-                // Create new event entry if DNE
+                // If the id DNE in dictionary, create a new event
                 if eventsDictionary[id] == nil {
                     eventsDictionary[id] = Event()
                 }
 
+                var event = eventsDictionary[id]!
+
+                // Add activities to event
                 if let activityID = row["activity_id"] as? Int {
-                    // Create new activities array if DNE
-                    if eventsDictionary[id]?.activities == nil {
-                        eventsDictionary[id]?.activities = [Int]()
+                    // If activities is nil, the create new activities array
+                    if event.activities == nil {
+                        event.activities = [Int]()
                     }
-                    // Append non-duplicate activities
-                    if eventsDictionary[id]?.activities?.contains(activityID) == false {
-                        eventsDictionary[id]?.activities?.append(activityID)
+                    // Only append unique activities
+                    if event.activities?.contains(activityID) == false {
+                        event.activities?.append(activityID)
                     }
                 }
 
+                // Add rsvps to event
                 if let userID = row["user_id"] as? String {
-                    // Create RSVP array for event
-                    if eventsDictionary[id]?.rsvps == nil {
-                        eventsDictionary[id]?.rsvps = [RSVP]()
+                    // If rsvps is nil, then create new RSVP array
+                    if event.rsvps == nil {
+                        event.rsvps = [RSVP]()
                     }
-                    // Append non-duplicate RSVPs (some will be duplicated during JOIN)
+                    // Only append unique rsvps
                     if usersInvited.contains(userID) == false {
                         var rsvp = RSVP()
                         rsvp.userID = userID
                         rsvp.eventID = row["event_id"] as? Int
                         rsvp.accepted = row["accepted"] as? Int
                         rsvp.comment = row["comment"] as? String
-                        eventsDictionary[id]?.rsvps?.append(rsvp)
+                        event.rsvps?.append(rsvp)
                         usersInvited.append(userID)
                     }
                 }
 
-                eventsDictionary[id]?.id = id
-                eventsDictionary[id]?.host = row["host"] as? String
-                eventsDictionary[id]?.isPublic = row["is_public"] as? Int
-                eventsDictionary[id]?.name = row["name"] as? String
-                eventsDictionary[id]?.emoji = row["emoji"] as? String
-                eventsDictionary[id]?.description = row["description"] as? String
-                eventsDictionary[id]?.location = row["location"] as? String
-                eventsDictionary[id]?.latitude = row["latitude"] as? Double
-                eventsDictionary[id]?.longitude = row["longitude"] as? Double
+                // Add remaining properties
+                event.id = id
+                event.host = row["host"] as? String
+                event.isPublic = row["is_public"] as? Int
+                event.name = row["name"] as? String
+                event.emoji = row["emoji"] as? String
+                event.description = row["description"] as? String
+                event.location = row["location"] as? String
+                event.latitude = row["latitude"] as? Double
+                event.longitude = row["longitude"] as? Double
 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
                 if let startTimeString = row["start_time"] as? String,
                    let startTime = dateFormatter.date(from: startTimeString) {
-                       eventsDictionary[id]?.startTime = startTime
+                       event.startTime = startTime
                 }
 
                 if let createdAtString = row["created_at"] as? String,
                    let createdAt = dateFormatter.date(from: createdAtString) {
-                       eventsDictionary[id]?.createdAt = createdAt
+                       event.createdAt = createdAt
                 }
 
                 if let updatedAtString = row["updated_at"] as? String,
                    let updatedAt = dateFormatter.date(from: updatedAtString) {
-                       eventsDictionary[id]?.updatedAt = updatedAt
+                       event.updatedAt = updatedAt
                 }
-            } else {
-                Log.error("event.id not found in \(row)")
             }
 
-            // return collection limited by page size if specified
+            // Return collection limited by page size if specified
             if pageSize > 0 && eventsDictionary.count == Int(pageSize) {
                 break
             }
