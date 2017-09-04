@@ -204,15 +204,16 @@ public class Handlers {
     public func postEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
 
+        // An event must have a single activity
         guard let activitiesJSON = json["activities"].array else {
-            Log.error("could not initialize event's activites")
-            try response.send(json: JSON(["message": "could not initialize event's activites"]))
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids)."]))
                         .status(.badRequest).end()
             return
         }
@@ -224,12 +225,13 @@ public class Handlers {
             }
         }
         guard activities.count > 0 else {
-            Log.error("event must have atleast one activity")
-            try response.send(json: JSON(["message": "event must have atleast one activity"]))
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity."]))
                         .status(.badRequest).end()
             return
         }
 
+        // RSVPs are optional for a newly created event
         let rsvps = json["rsvps"].arrayValue.map({
             RSVP(rsvpID: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
@@ -239,6 +241,7 @@ public class Handlers {
         let startTimeString = json["start_time"].stringValue
         let startTime: Date? = startTimeString != "" ? dateFormatter.date(from: startTimeString) : nil
 
+        // Create temp event to insert into database
         let newEvent = Event(
             id: nil,
             name: json["name"].string,
@@ -257,8 +260,8 @@ public class Handlers {
                 "latitude", "longitude", "isPublic", "activities", "rsvps"])
 
         if missingParameters.count != 0 {
-            Log.error("parameters missing \(missingParameters)")
-            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+            Log.error("Unable to initialize parameters from request body: \(missingParameters).")
+            try response.send(json: JSON(["message": "Unable to initialize parameters from request body: \(missingParameters)."]))
                         .status(.badRequest).end()
             return
         }
@@ -266,7 +269,7 @@ public class Handlers {
         let success = try dataAccessor.createEvent(newEvent)
 
         if success {
-            try response.send(json: JSON(["message": "event created"])).status(.created).end()
+            try response.send(json: JSON(["message": "Event created."])).status(.created).end()
             return
         }
 
@@ -276,8 +279,8 @@ public class Handlers {
     public func postRSVPsForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
@@ -290,8 +293,8 @@ public class Handlers {
         }
 
         guard let rsvpJSONArray = json["rsvps"].array else {
-            Log.error("json body is missing rsvps")
-            try response.send(json: JSON(["message": "json body is missing rsvps"]))
+            Log.error("Cannot initialize body parameters: rsvps. rsvps is a JSON array of JSON objects.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: rsvps. rsvps is a JSON array of JSON objects."]))
                         .status(.badRequest).end()
             return
         }
@@ -305,10 +308,18 @@ public class Handlers {
                 accepted: rsvpJSON["accepted"].int,
                 comment: rsvpJSON["comment"].string
             )
-            rsvps.append(rsvp)
-        }
 
-        Log.info("\(rsvps)")
+            let missingParameters = rsvp.validateParameters(["userID", "eventID", "accepted", "comment"])
+
+            if missingParameters.count != 0 {
+                Log.error("Unable to initialize parameters from request body (rsvps): \(missingParameters).")
+                try response.send(json: JSON(["message": "Unable to initialize parameters from request body (rsvps): \(missingParameters)."]))
+                            .status(.badRequest).end()
+                return
+            } else {
+                rsvps.append(rsvp)
+            }
+        }
 
         var postEvent = Event()
         postEvent.id = Int(id)
@@ -317,8 +328,8 @@ public class Handlers {
         let missingParameters = postEvent.validateParameters(["id", "rsvps"])
 
         if missingParameters.count != 0 {
-            Log.error("parameters missing \(missingParameters)")
-            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+            Log.error("Unable to initialize parameters from request body: \(missingParameters).")
+            try response.send(json: JSON(["message": "Unable to initialize parameters from request body: \(missingParameters)."]))
                         .status(.badRequest).end()
             return
         }
@@ -326,7 +337,7 @@ public class Handlers {
         let success = try dataAccessor.createEventRSVPs(withEvent: postEvent)
 
         if success {
-            try response.send(json: JSON(["message": "rsvps sent"])).status(.OK).end()
+            try response.send(json: JSON(["message": "RSVPs sent for event."])).status(.OK).end()
             return
         }
 
@@ -338,8 +349,8 @@ public class Handlers {
     public func putEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
@@ -376,8 +387,8 @@ public class Handlers {
                 "latitude", "longitude", "isPublic", "activities"])
 
         if missingParameters.count != 0 {
-            Log.error("parameters missing \(missingParameters)")
-            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+            Log.error("Unable to initialize parameters from request body: \(missingParameters).")
+            try response.send(json: JSON(["message": "Unable to initialize parameters from request body: \(missingParameters)."]))
                         .status(.badRequest).end()
             return
         }
@@ -385,7 +396,7 @@ public class Handlers {
         let success = try dataAccessor.updateEvent(updateEvent)
 
         if success {
-            try response.send(json: JSON(["message": "event updated"])).status(.OK).end()
+            try response.send(json: JSON(["message": "Event updated."])).status(.OK).end()
             return
         }
 
@@ -395,8 +406,8 @@ public class Handlers {
     public func putRSVPForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
@@ -409,36 +420,37 @@ public class Handlers {
         }
 
         guard let rsvpID = request.parameters["rsvp_id"] else {
-            Log.error("rsvp_id (path parameter) missing")
-            try response.send(json: JSON(["message": "rsvp_id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: rsvp_id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: rsvp_id."]))
                         .status(.badRequest).end()
             return
-        }
-
-        // FIXME: Use the userID specified in JWT
-        guard let userID = json["user_id"].string, let accepted = json["accepted"].int,
-            let comment = json["comment"].string else {
-                Log.error("could not initialize user_id, accepted, and comment")
-                try response.send(json: JSON(["message": "could not initialize user_id, accepted, and comment"]))
-                            .status(.badRequest).end()
-                return
         }
 
         var event = Event()
         event.id = Int(id)
 
+        // FIXME: Use the userID specified in JWT
         let rsvp = RSVP(
             rsvpID: Int(rsvpID),
-            userID: userID,
+            userID: json["user_id"].string,
             eventID: event.id!,
-            accepted: accepted,
-            comment: comment
+            accepted: json["accepted"].int,
+            comment: json["comment"].string
         )
+
+        let missingParameters = rsvp.validateParameters(["userID", "accepted", "comment"])
+
+        if missingParameters.count != 0 {
+            Log.error("Unable to initialize parameters from request body: \(missingParameters).")
+            try response.send(json: JSON(["message": "Unable to initialize parameters from request body: \(missingParameters)."]))
+                        .status(.badRequest).end()
+            return
+        }
 
         let success = try dataAccessor.updateEventRSVP(event, rsvp: rsvp)
 
         if success {
-            try response.send(json: JSON(["message": "rsvp updated"])).status(.OK).end()
+            try response.send(json: JSON(["message": "RSVP updated for event."])).status(.OK).end()
             return
         }
 
@@ -459,7 +471,7 @@ public class Handlers {
         let success = try dataAccessor.deleteEvent(withID: id)
 
         if success {
-            try response.send(json: JSON(["message": "resource deleted"])).status(.noContent).end()
+            try response.send(json: JSON(["message": "Event deleted."])).status(.noContent).end()
             return
         }
 

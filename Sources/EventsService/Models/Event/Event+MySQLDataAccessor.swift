@@ -327,8 +327,8 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func updateEventRSVP(_ event: Event, rsvp: RSVP) throws -> Bool {
         let updateRSVPQuery = MySQLQueryBuilder()
             .update(data: rsvp.toMySQLRow(), table: "rsvps")
-            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", "\(rsvp.rsvpID!)")
-
+            .wheres(statement: "event_id=? AND rsvp_id=?", parameters: "\(event.id!)", "\(rsvp.rsvpID!)")
+        
         let result = try execute(builder: updateRSVPQuery)
         return result.affectedRows > 0
     }
