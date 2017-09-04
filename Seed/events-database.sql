@@ -114,14 +114,14 @@ DELIMITER ;
 DROP TABLE IF EXISTS `rsvps`;
 
 CREATE TABLE `rsvps` (
-  `id` int(6) unsigned NOT NULL AUTO_INCREMENT,
+  `rsvp_id` int(6) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) NOT NULL,
   `event_id` int(6) unsigned NOT NULL,
   `accepted` tinyint(1) DEFAULT NULL,
   `comment` varchar(255) DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`rsvp_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4;
 
 --

@@ -4,7 +4,7 @@ import SwiftyJSON
 // MARK: - RSVP
 
 public struct RSVP {
-    public var id: Int?
+    public var rsvpID: Int?
     public var userID: String?
     public var eventID: Int?
     public var accepted: Int?
@@ -18,7 +18,7 @@ extension RSVP: JSONAble {
         var dict = [String: Any]()
         let nilValue: Any? = nil
 
-        dict["id"] = id != nil ? id : nilValue
+        dict["rsvp_id"] = rsvpID != nil ? rsvpID : nilValue
         dict["user_id"] = userID != nil ? userID : nilValue
         dict["accepted"] = accepted != nil ? accepted : nilValue
         dict["comment"] = comment != nil ? comment : nilValue
@@ -32,7 +32,7 @@ extension RSVP: JSONAble {
 extension RSVP {
     func toMySQLRow() -> ([String: Any]) {
         var data = [String: Any]()
-
+        
         data["user_id"] = userID
         data["event_id"] = eventID
         data["accepted"] = accepted

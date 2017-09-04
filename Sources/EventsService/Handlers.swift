@@ -31,8 +31,8 @@ public class Handlers {
     public func getSingleEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }
@@ -49,17 +49,25 @@ public class Handlers {
 
     public func getEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
-            Log.error("could not initialize page_size and page_number")
-            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
-                        .status(.internalServerError).end()
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
             return
         }
 
-        guard let body = request.body, case let .json(json) = body, let idFilter = json["id"].array else {
-            Log.error("json body is invalid; ensure id filter is present")
-            try response.send(json: JSON(["message": "json body is invalid; ensure id filter is present"]))
-                        .status(.internalServerError).end()
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let idFilter = json["id"].array else {
+            Log.error("Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -74,12 +82,13 @@ public class Handlers {
         try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
-    public func getEventsOnSchedule(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getScheduledEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
-            Log.error("could not initialize page_size and page_number")
-            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
-                        .status(.internalServerError).end()
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -100,12 +109,13 @@ public class Handlers {
         try response.send(json: events!.toJSON()).status(.OK).end()
     }
 
-    public func getEventsBySearch(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getSearchedEvents(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
-            Log.error("could not initialize page_size and page_number")
-            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
-                        .status(.internalServerError).end()
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -151,16 +161,17 @@ public class Handlers {
     public func getRSVPsForEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }
 
-        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
-            Log.error("could not initialize page_size and page_number")
-            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
-                        .status(.internalServerError).end()
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -176,10 +187,11 @@ public class Handlers {
 
     public func getRSVPsForUser(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1") else {
-            Log.error("could not initialize page_size and page_number")
-            try response.send(json: JSON(["message": "could not initialize page_size and page_number"]))
-                        .status(.internalServerError).end()
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
             return
         }
 
@@ -216,7 +228,7 @@ public class Handlers {
             if let activity = activityJSON.int {
                 activities.append(activity)
             }
-        }        
+        }
         guard activities.count > 0 else {
             Log.error("event must have atleast one activity")
             try response.send(json: JSON(["message": "event must have atleast one activity"]))
@@ -225,7 +237,7 @@ public class Handlers {
         }
 
         let rsvps = json["rsvps"].arrayValue.map({
-            RSVP(id: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
+            RSVP(rsvpID: nil, userID: $0.stringValue, eventID: nil, accepted: nil, comment: nil)
         })
 
         let dateFormatter = DateFormatter()
@@ -277,8 +289,8 @@ public class Handlers {
         }
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }
@@ -293,7 +305,7 @@ public class Handlers {
         var rsvps: [RSVP] = []
         for rsvpJSON in rsvpJSONArray {
             let rsvp = RSVP(
-                id: nil,
+                rsvpID: nil,
                 userID: rsvpJSON["user_id"].string,
                 eventID: Int(id),
                 accepted: rsvpJSON["accepted"].int,
@@ -339,8 +351,8 @@ public class Handlers {
         }
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }
@@ -396,8 +408,8 @@ public class Handlers {
         }
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }
@@ -422,7 +434,7 @@ public class Handlers {
         event.id = Int(id)
 
         let rsvp = RSVP(
-            id: Int(rsvpID),
+            rsvpID: Int(rsvpID),
             userID: userID,
             eventID: event.id!,
             accepted: accepted,
@@ -444,8 +456,8 @@ public class Handlers {
     public func deleteEvent(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let id = request.parameters["id"] else {
-            Log.error("id (path parameter) missing")
-            try response.send(json: JSON(["message": "id (path parameter) missing"]))
+            Log.error("Cannot initialize path parameter: id.")
+            try response.send(json: JSON(["message": "Cannot initialize path parameter: id."]))
                         .status(.badRequest).end()
             return
         }

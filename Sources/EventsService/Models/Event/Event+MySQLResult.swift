@@ -22,25 +22,23 @@ public extension MySQLResultProtocol {
                     eventsDictionary[id] = Event()
                 }
 
-                var event = eventsDictionary[id]!
-
                 // Add activities to event
                 if let activityID = row["activity_id"] as? Int {
                     // If activities is nil, the create new activities array
-                    if event.activities == nil {
-                        event.activities = [Int]()
+                    if eventsDictionary[id]?.activities == nil {
+                        eventsDictionary[id]?.activities = [Int]()
                     }
                     // Only append unique activities
-                    if event.activities?.contains(activityID) == false {
-                        event.activities?.append(activityID)
+                    if eventsDictionary[id]?.activities?.contains(activityID) == false {
+                        eventsDictionary[id]?.activities?.append(activityID)
                     }
                 }
 
                 // Add rsvps to event
                 if let userID = row["user_id"] as? String {
                     // If rsvps is nil, then create new RSVP array
-                    if event.rsvps == nil {
-                        event.rsvps = [RSVP]()
+                    if eventsDictionary[id]?.rsvps == nil {
+                        eventsDictionary[id]?.rsvps = [RSVP]()
                     }
                     // Only append unique rsvps
                     if usersInvited.contains(userID) == false {
@@ -49,38 +47,38 @@ public extension MySQLResultProtocol {
                         rsvp.eventID = row["event_id"] as? Int
                         rsvp.accepted = row["accepted"] as? Int
                         rsvp.comment = row["comment"] as? String
-                        event.rsvps?.append(rsvp)
+                        eventsDictionary[id]?.rsvps?.append(rsvp)
                         usersInvited.append(userID)
                     }
                 }
 
                 // Add remaining properties
-                event.id = id
-                event.host = row["host"] as? String
-                event.isPublic = row["is_public"] as? Int
-                event.name = row["name"] as? String
-                event.emoji = row["emoji"] as? String
-                event.description = row["description"] as? String
-                event.location = row["location"] as? String
-                event.latitude = row["latitude"] as? Double
-                event.longitude = row["longitude"] as? Double
+                eventsDictionary[id]?.id = id
+                eventsDictionary[id]?.host = row["host"] as? String
+                eventsDictionary[id]?.isPublic = row["is_public"] as? Int
+                eventsDictionary[id]?.name = row["name"] as? String
+                eventsDictionary[id]?.emoji = row["emoji"] as? String
+                eventsDictionary[id]?.description = row["description"] as? String
+                eventsDictionary[id]?.location = row["location"] as? String
+                eventsDictionary[id]?.latitude = row["latitude"] as? Double
+                eventsDictionary[id]?.longitude = row["longitude"] as? Double
 
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
                 if let startTimeString = row["start_time"] as? String,
                    let startTime = dateFormatter.date(from: startTimeString) {
-                       event.startTime = startTime
+                       eventsDictionary[id]?.startTime = startTime
                 }
 
                 if let createdAtString = row["created_at"] as? String,
                    let createdAt = dateFormatter.date(from: createdAtString) {
-                       event.createdAt = createdAt
+                       eventsDictionary[id]?.createdAt = createdAt
                 }
 
                 if let updatedAtString = row["updated_at"] as? String,
                    let updatedAt = dateFormatter.date(from: updatedAtString) {
-                       event.updatedAt = updatedAt
+                       eventsDictionary[id]?.updatedAt = updatedAt
                 }
             }
 

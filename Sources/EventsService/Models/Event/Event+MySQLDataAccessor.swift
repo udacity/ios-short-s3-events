@@ -33,10 +33,10 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     // MARK: READ
 
     public func getEvents(pageSize: Int = 10, pageNumber: Int = 1, type: EventScheduleType = .all) throws -> [Event]? {
-        // select event ids and apply pagination before doing joins
+
+        // Use schedule type to create proper query
         var selectEventIDs = MySQLQueryBuilder()
             .select(fields: ["id"], table: "events")
-
         switch type {
         case .upcoming:
             selectEventIDs = selectEventIDs.wheres(statement: "start_time >= CURDATE()", parameters: [])
@@ -46,15 +46,15 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             break
         }
 
-        var events = [Event]()
-
+        // Select ids and apply pagination before joins
         let simpleResults = try execute(builder: selectEventIDs)
         simpleResults.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
-
         let simpleEvents = simpleResults.toEvents(pageSize: pageSize)
         let ids = simpleEvents.map({String($0.id!)})
 
-        // once the ids are determind, perform the joins
+        var events = [Event]()
+
+        // Once the ids are determind, perform the joins
         if ids.count > 0 {
             let selectEvents = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
@@ -62,7 +62,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             let selectEventGames = MySQLQueryBuilder()
                 .select(fields: ["activity_id", "event_id"], table: "event_games")
             let selectRSVPs = MySQLQueryBuilder()
-                .select(fields: ["id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
+                .select(fields: ["rsvp_id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
             let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: ids)
                 .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
                 .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
@@ -75,22 +75,31 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     }
 
     public func getEvents(withIDs ids: [String], pageSize: Int = 10, pageNumber: Int = 1) throws -> [Event]? {
+        let selectEventIDs = MySQLQueryBuilder()
+            .select(fields: ["id"], table: "events")
+            .wheres(statement:"id IN (?)", parameters: ids)
+
+        // Select ids and apply pagination before joins
+        let simpleResults = try execute(builder: selectEventIDs)
+        simpleResults.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+        let simpleEvents = simpleResults.toEvents(pageSize: pageSize)
+        let newIDs = simpleEvents.map({String($0.id!)})
+
+        // Select events and perform joins
         let selectEvents = MySQLQueryBuilder()
             .select(fields: ["id", "name", "emoji", "description", "host", "start_time",
                 "location", "latitude", "longitude", "is_public"], table: "events")
         let selectEventGames = MySQLQueryBuilder()
             .select(fields: ["activity_id", "event_id"], table: "event_games")
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
-
-        let selectQuery = selectEvents.wheres(statement:"id IN (?)", parameters: ids)
+            .select(fields: ["rsvp_id", "user_id", "event_id", "accepted", "comment"], table: "rsvps")
+        let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: newIDs)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
 
         let result = try execute(builder: selectQuery)
-        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
-
         let events = result.toEvents(pageSize: pageSize)
+
         return (events.count == 0) ? nil : events
     }
 
@@ -110,7 +119,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
 
     public func getRSVPs(forEventID: String, pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["id", "user_id", "accepted", "comment"], table: "rsvps")
+            .select(fields: ["rsvp_id", "user_id", "accepted", "comment"], table: "rsvps")
             .wheres(statement: "event_id=?", parameters: forEventID)
 
         let result = try execute(builder: selectRSVPs)
@@ -123,7 +132,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func getRSVPsForUser(pageSize: Int = 10, pageNumber: Int = 1) throws -> [RSVP]? {
         // FIXME: use wheres to select RSVPs for user specified in JWT
         let selectRSVPs = MySQLQueryBuilder()
-            .select(fields: ["id", "user_id", "accepted", "comment"], table: "rsvps")
+            .select(fields: ["rsvp_id", "user_id", "accepted", "comment"], table: "rsvps")
 
         let result = try execute(builder: selectRSVPs)
         result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
@@ -316,7 +325,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
     public func updateEventRSVP(_ event: Event, rsvp: RSVP) throws -> Bool {
         let updateRSVPQuery = MySQLQueryBuilder()
             .update(data: rsvp.toMySQLRow(), table: "rsvps")
-            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", "\(rsvp.id!)")
+            .wheres(statement: "event_id=? AND id=?", parameters: "\(event.id!)", "\(rsvp.rsvpID!)")
 
         let result = try execute(builder: updateRSVPQuery)
         return result.affectedRows > 0
@@ -393,5 +402,5 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             return false
         }
         return true
-    }    
+    }
 }
