@@ -66,7 +66,8 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
             let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: ids)
                 .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
                 .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
-
+                .order(byExpression: "id", order: .Ascending)
+            
             let result = try execute(builder: selectQuery)
             events = result.toEvents()
         }
@@ -96,6 +97,7 @@ public class EventMySQLDataAccessor: EventMySQLDataAccessorProtocol {
         let selectQuery = selectEvents.wheres(statement: "id IN (?)", parameters: newIDs)
             .join(builder: selectEventGames, from: "id", to: "event_id", type: .LeftJoin)
             .join(builder: selectRSVPs, from: "id", to: "event_id", type: .LeftJoin)
+            .order(byExpression: "id", order: .Ascending)
 
         let result = try execute(builder: selectQuery)
         let events = result.toEvents(pageSize: pageSize)

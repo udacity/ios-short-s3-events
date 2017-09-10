@@ -5,7 +5,7 @@
       "package": "CCurl",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/CCurl.git",
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "package": "CEpoll",
@@ -17,7 +17,7 @@
       "package": "HeliumLogger",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/HeliumLogger.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "Kitura",
@@ -35,31 +35,25 @@
       "package": "Kitura-TemplateEngine",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/Kitura-TemplateEngine.git",
-      "version": "1.7.1"
-    },
-    {
-      "package": "KituraHTTPTest",
-      "reason": null,
-      "repositoryURL": "https://github.com/nicholasjackson/kitura-http-test.git",
-      "version": "0.2.0"
+      "version": "1.7.2"
     },
     {
       "package": "LoggerAPI",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/LoggerAPI.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "MySQL",
       "reason": null,
-      "repositoryURL": "https://github.com/nicholasjackson/swift-mysql.git",
-      "version": "1.7.2"
+      "repositoryURL": "https://github.com/jarrodparkes/swift-mysql",
+      "version": "1.7.3"
     },
     {
       "package": "OpenSSL",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
-      "version": "0.3.6"
+      "version": "0.3.7"
     },
     {
       "package": "Signals",
@@ -89,7 +83,7 @@
       "package": "SwiftyJSON",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/SwiftyJSON.git",
-      "version": "16.0.1"
+      "version": "16.0.2"
     }
   ],
   "version": 1
