@@ -212,8 +212,8 @@ public class Handlers {
 
         // An event must have a single activity
         guard let activitiesJSON = json["activities"].array else {
-            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity.")
-            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids)."]))
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of ints (activity ids). New event must have at least one activity.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of ints (activity ids)."]))
                         .status(.badRequest).end()
             return
         }
@@ -225,8 +225,8 @@ public class Handlers {
             }
         }
         guard activities.count > 0 else {
-            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity.")
-            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids). New event must have at least one activity."]))
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of ints (activity ids). New event must have at least one activity.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of ints (activity ids). New event must have at least one activity."]))
                         .status(.badRequest).end()
             return
         }
